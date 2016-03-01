@@ -1,12 +1,12 @@
-package com.antizikagame;
+package com.antizikagame.object;
 
 /**
  * Created by Pavel on 05.01.2016.
  */
-public class SimpleCircle {
+public class SimpleCircle{
 
-    protected int x;
-    protected int y;
+    public int x;
+    public int y;
     protected int radius;
     private   int color;
 

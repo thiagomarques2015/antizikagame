@@ -8,11 +8,11 @@ public class GameLoop extends Thread {
     static final long FPS = 30;
     private CanvasView view;
     private boolean running = false;
-    private final GameManager gameManager;
+    private final IGameLoop callback;
 
-    public GameLoop(GameManager gameManager, CanvasView view) {
+    public GameLoop(IGameLoop gameManager, CanvasView view) {
         this.view = view;
-        this.gameManager = gameManager;
+        this.callback = gameManager;
     }
 
     public void setRunning(boolean run) {
@@ -22,7 +22,8 @@ public class GameLoop extends Thread {
     private Runnable onDraw = new Runnable() {
         @Override
         public void run() {
-            gameManager.moveEnemies();
+            if(callback != null)
+                callback.update();
         }
     };
 

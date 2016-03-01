@@ -1,6 +1,8 @@
-package com.antizikagame;
+package com.antizikagame.object;
 
 import android.graphics.Color;
+
+import com.antizikagame.GameManager;
 
 import java.util.Random;
 
@@ -9,7 +11,7 @@ import java.util.Random;
  */
 public class EnemyCircle extends SimpleCircle {
 
-    public static final int FROM_RADIUS  = 110;
+    public static final int FROM_RADIUS  = 50;
     public static final int TO_RADIUS    = 10;
     public static final int RANDOM_SPEED = 3;
     public static final int MAX_RANDOM_SPEED = RANDOM_SPEED * 2;

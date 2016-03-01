@@ -1,5 +1,8 @@
 package com.antizikagame;
 
+import com.antizikagame.object.SimpleCircle;
+import com.antizikagame.object.Sprite;
+
 /**
  * Created by Pavel on 04.01.2016.
  */

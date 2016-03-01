@@ -1,8 +1,10 @@
-package com.antizikagame;
+package com.antizikagame.object;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 
 /**
@@ -26,6 +28,7 @@ public class Sprite {
     private int lastFrame;
     private boolean animationControl;
     public Paint mPaint;
+    private Point lastCollision;
 
     public Sprite(Bitmap bmp) {
         this(bmp, 1, 1);
@@ -136,5 +139,46 @@ public class Sprite {
         } else {
             return false;
         }
+    }
+
+    public Bitmap getBitmap() {
+        return mBitmap;
+    }
+
+    public double getDist(SimpleCircle circle){
+        return Math.sqrt( (x-circle.x)*(x-circle.x) + (y-circle.y)*(y-circle.y) );
+    }
+
+    public double getDist(Sprite sprite){
+        return Math.sqrt( (x-sprite.x)*(x-sprite.x) + (y-sprite.y)*(y-sprite.y) );
+    }
+
+    public boolean checkForCollision(Sprite sprite) {
+        try {
+            if (x<0 && sprite.x<0 && y<0 && sprite.y<0) return false;
+            Rect r1 = new Rect(x, y, x
+                    + width,  y + height);
+            Rect r2 = new Rect(sprite.x, sprite.y, sprite.x +
+                    sprite.width, sprite.y + sprite.height);
+            Rect r3 = new Rect(r1);
+            if(r1.intersect(r2)) {
+                for (int i = r1.left; i<r1.right; i++) {
+                    for (int j = r1.top; j<r1.bottom; j++) {
+                        if (mBitmap.getPixel(i-r3.left, j-r3.top)!=
+                                Color.TRANSPARENT) {
+                            if (sprite.getBitmap().getPixel(i - r2.left, j - r2.top) !=
+                                    Color.TRANSPARENT) {
+                                //lastCollision = new Point(sprite.x +i-r2.left, sprite.y + j-r2.top);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //lastCollision = new Point(-1,-1);
+        return false;
     }
 }

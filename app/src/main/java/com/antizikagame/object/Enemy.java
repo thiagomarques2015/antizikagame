@@ -1,6 +1,9 @@
-package com.antizikagame;
+package com.antizikagame.object;
 
 import android.graphics.Bitmap;
+import android.graphics.Paint;
+
+import com.antizikagame.GameManager;
 
 import java.util.Random;
 
@@ -20,12 +23,13 @@ public class Enemy extends Sprite {
     private int speedX;
     private int speedY;
     private final int CONT = 4;
+    private boolean dying;
 
 
     public Enemy(int x, int y, Random random, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
-        speedX = random.nextInt(7) - 3; //Velocidade horizontal de -3 a 3.
-        speedY = random.nextInt(7) - 3; //Velocidade vertical de -3 a 3.
+        speedX = (random.nextInt(7) - 3) + 1; //Velocidade horizontal de -3 a 3.
+        speedY = (random.nextInt(7) - 3) + 1; //Velocidade vertical de -3 a 3.
         this.x = x;
         this.y = y;
 
@@ -36,8 +40,14 @@ public class Enemy extends Sprite {
     @Override
     public void update() {
         super.update();
-        this.x += speedX;
+
         this.y += speedY;
+
+        if(dying){
+            return;
+        }
+
+        this.x += speedX;
 
         if(x < 0 || x > GameManager.getWidth()-width){
             speedX *= -1;
@@ -47,10 +57,14 @@ public class Enemy extends Sprite {
         }
     }
 
+    public void pull(){
+        speedX *= -1;
+        speedY *= -1;
+        changeDirection();
+    }
+
     private void changeDirection(){
-
         checkState();
-
         setAnimation(frame, firstFrame, firstFrame + CONT, ANIM_GOBACK); // Seta a animação apenas como "ida" (ciclíca).
     }
 
@@ -64,6 +78,14 @@ public class Enemy extends Sprite {
 
     private boolean isLeft(){
         return speedX < 0;
+    }
+
+    public void kill(){
+        dying = true;
+        speedY = (speedY > 0)? speedY : speedY * -1;
+        speedY = (speedY == 0)? -1 : speedY;
+        setAnimation(14, 14, 1, ANIM_STOP);
+        mPaint = new Paint();
     }
 
     /**

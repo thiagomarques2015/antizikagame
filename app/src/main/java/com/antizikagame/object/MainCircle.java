@@ -1,6 +1,8 @@
-package com.antizikagame;
+package com.antizikagame.object;
 
 import android.graphics.Color;
+
+import com.antizikagame.GameManager;
 
 /**
  * Created by Pavel on 04.01.2016.
