@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Antizika Game</string>
+    <string name="score">Score : %s</string>
+    <string name="next_level_msg">Toque na tela para ir para o próximo nível</string>
 </resources>

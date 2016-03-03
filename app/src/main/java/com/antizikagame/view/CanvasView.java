@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.antizikagame.GameManager;
 import com.antizikagame.ICanvasView;
+import com.antizikagame.R;
 import com.antizikagame.object.SimpleCircle;
 import com.antizikagame.object.Sprite;
 
@@ -33,9 +34,12 @@ public class CanvasView extends View implements ICanvasView {
     private GameManager gameManager;
 
     private Toast toast;
-    private Paint paintText;
+    private Paint paintClock, paintText;
     private float timeX;
     private float timeY;
+    private float scoreX;
+    private float scoreY;
+    private Paint paintNext;
 
     public CanvasView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -61,11 +65,23 @@ public class CanvasView extends View implements ICanvasView {
         paint.setStyle(Paint.Style.FILL);
 
         // Clock
-        paintText = new Paint();
-        paintText.setColor(Color.WHITE);
-        paintText.setTextSize(35);
+        paintClock = new Paint();
+        paintClock.setColor(Color.WHITE);
+        paintClock.setTextSize(35);
         timeX = width* 0.8f;
         timeY = height*0.05f;
+
+        // Next Level
+        paintNext = new Paint();
+        paintNext.setColor(Color.parseColor("#1f1a17"));
+        paintNext.setTextSize(20);
+
+        // Score
+        paintText = new Paint();
+        paintText.setColor(Color.WHITE);
+        paintText.setTextSize(20);
+        scoreX = width* 0.05f;
+        scoreY = height*0.05f;
     }
 
     @Override
@@ -73,7 +89,13 @@ public class CanvasView extends View implements ICanvasView {
         super.onDraw(canvas);
         this.canvas = canvas;
         // Relogio
-        canvas.drawText(gameManager.getClock(), timeX, timeY, paintText);
+        canvas.drawText(gameManager.getClock(), timeX, timeY, paintClock);
+        // Score
+        canvas.drawText(String.format(getContext().getString(R.string.score), gameManager.getScore().toString()), scoreX, scoreY, paintText);
+
+        if(gameManager.isNextLevel())
+            canvas.drawText(getContext().getString(R.string.next_level_msg), 50, getHeight()*0.7f, paintNext);
+
         gameManager.onDraw();
     }
 

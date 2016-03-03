@@ -141,7 +141,11 @@ public class Enemy extends Sprite {
      */
     private void incremmentSpeedFreeFall(){
         int time = getTime() - timeStarted;
+
+        time = (time < 0)? time * -1 : time;
+
         if(!dead && time < 1){
+            //Log.d("Y", String.format("Y = %s, Time = %s", y, time));
             return;
         }else{
             dead = true;
@@ -158,5 +162,9 @@ public class Enemy extends Sprite {
 
     public boolean isDead() {
         return dying || dead;
+    }
+
+    public boolean isAfterDead(){
+        return y + height > GameManager.getHeight() && dead;
     }
 }

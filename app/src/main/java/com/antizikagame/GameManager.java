@@ -28,8 +28,7 @@ public class GameManager implements IGameLoop {
     public static final int MAX_ENEMY_CIRCLE = 10;
     private static final int TOTAL_ENEMIES = 10;
 
-
-    private static final int TIME_LEVEL_1 = 15;
+    private static final int TIME_LEVEL = 5;
 
     private CanvasView canvasView;
     private static int width;
@@ -39,24 +38,56 @@ public class GameManager implements IGameLoop {
     private ArrayList<EnemyCircle> enemyCircles;
     private GameLoop gameLoopThread;
     private List<Sprite> mSprites;
-    private List<Enemy> enemyMosquitos;
+    private List<Enemy> enimies;
+    private List<Enemy> deadEnemies;
     private Racket racket;
     private ClockManager clock;
     private SimpleDateFormat clockFormat;
+    private int level;
+    private int score;
+    private long startTime; // O tempo que o level foi iniciado
+    private Sprite nextLevelSprite; // NextLevel
+    private int aliveEnemy;
+    private long timeOver;
 
     public GameManager(CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
         mSprites = new ArrayList<>();
         enemyCircles = new ArrayList<>();
-        enemyMosquitos = new ArrayList<>();
+        enimies = new ArrayList<>();
+        deadEnemies = new ArrayList<>();
         this.width  = width;
         this.height = height;
         //initMainCircle();
+        initNextLevel();
+        newStage();
         initRacket();
         initTexts();
         //initEnemyCircles();
         initEnemies();
         initMainLoop();
+    }
+
+    private void initMainLoop() {
+        gameLoopThread = new GameLoop(this, canvasView);
+        gameLoopThread.setRunning(true);
+        gameLoopThread.start();
+    }
+
+    private void newStage() {
+        nextLevelSprite.visible = false; //Deixa a mensagem e imagem de proximo level invisiveis
+        startTime = System.currentTimeMillis(); //Define a quantidade de Pinks de acordo com o level
+        aliveEnemy = TOTAL_ENEMIES+level; //Define a quantidade de mosquitos de acordo com o level
+        level = (int) Math.max(TIME_LEVEL * 3 - (System.currentTimeMillis() - startTime)/500, 1);
+        Log.d("Level", "" + level);
+    }
+
+    private void initNextLevel() {
+        Resources res = canvasView.getResources();
+        mSprites.add(nextLevelSprite = new Sprite(BitmapFactory.decodeResource(res, R.mipmap.next_level)));
+        nextLevelSprite.x = getWidth()/2 - nextLevelSprite.width/2;
+        nextLevelSprite.y = (int) (getHeight()*0.2f);
+        nextLevelSprite.visible = false;
     }
 
     private void initTexts() {
@@ -65,14 +96,8 @@ public class GameManager implements IGameLoop {
         // Formato do relogio
         clockFormat = new SimpleDateFormat("mm:ss", Locale.getDefault());
         // Cria o relogio
-        clock = new ClockManager().timeInitial(now.getTimeInMillis()).maxTime(Calendar.SECOND, TIME_LEVEL_1);
+        clock = new ClockManager().timeInitial(now.getTimeInMillis()).maxTime(Calendar.SECOND, level);
         Log.d("Clock", getClock());
-    }
-
-    private void initMainLoop() {
-        gameLoopThread = new GameLoop(this, canvasView);
-        gameLoopThread.setRunning(true);
-        gameLoopThread.start();
     }
 
     public String getClock(){
@@ -88,10 +113,6 @@ public class GameManager implements IGameLoop {
         mSprites.add(racket);
     }
 
-    private void initMainCircle() {
-        mainCircle = new MainCircle(width/2, height/2);
-    }
-
     private void initEnemies() {
         Random random = new Random();
         Resources res = canvasView.getResources();
@@ -101,10 +122,10 @@ public class GameManager implements IGameLoop {
         int limitEnemyX = getWidth()-bitmapEnemy.getWidth()/cols,
             limitEnemyY = getHeight()-bitmapEnemy.getHeight()/rows;
 
-        for(int i=0; i<TOTAL_ENEMIES; i++)
-            enemyMosquitos.add(new Enemy(random.nextInt(limitEnemyX), random.nextInt(limitEnemyY), random, bitmapEnemy, rows, cols));
+        for(int i=0; i<aliveEnemy; i++)
+            enimies.add(new Enemy(random.nextInt(limitEnemyX), random.nextInt(limitEnemyY), random, bitmapEnemy, rows, cols));
 
-        mSprites.addAll(enemyMosquitos);
+        mSprites.addAll(enimies);
     }
 
     private void initEnemyCircles() {
@@ -128,7 +149,7 @@ public class GameManager implements IGameLoop {
 
     @Override
     public void update() {
-        checkCollision();
+        checkEnimies();
         updateSprites();
         moveCircles();
         canvasView.redraw();
@@ -149,43 +170,70 @@ public class GameManager implements IGameLoop {
             s.update();
     }
 
-    public void onTouchEvent(int x, int y) {
+    public synchronized void onTouchEvent(int x, int y) {
         //mainCircle.moveMainCircleWhenTouchAt(x, y);
-        racket.move(x, y);
+        if(aliveEnemy > 0)
+            racket.move(x, y);
+        else{
+            //Log.d("Gameover", "Nao existe mais inimigos");
+            Calendar dif = Calendar.getInstance();
+            dif.setTimeInMillis(System.currentTimeMillis() - timeOver);
+            int sec = dif.get(Calendar.SECOND);
+            // Se passar um 1 segundo depois do gameover fecha
+            if(sec > 1)
+                // Inicia o novo nivel
+                newStage();
+        }
         //moveEnemies(); // Acelera todos
     }
 
-    private void checkCollision(){
+    private synchronized void checkEnimies(){
 
-        for (Enemy e : enemyMosquitos) {
-            if(racket.checkForCollision(e)){
-                e.kill();
-                //Log.d("Collision", "Um mosquito foi atingido pela raquete");
+        if(aliveEnemy <= 0){
+            //Log.d("Gameover", "Nao existe mais mosquitos vivos");
+            return;
+        }
+
+        for (Enemy e : enimies) {
+            checkCollision(e);
+            checkIfDead(e);
+        }
+
+        if(deadEnemies.size() > 0){
+            // Remove os inimigos da lista
+            enimies.removeAll(deadEnemies);
+            // Remove os inimigos da lista de sprites
+            mSprites.removeAll(deadEnemies);
+            // Limpa a lista de inimigos mortos
+            deadEnemies.clear();
+        }
+    }
+
+    private void checkIfDead(Enemy e) {
+        if(e.isAfterDead())
+            deadEnemies.add(e);
+    }
+
+    private void checkCollision(Enemy e){
+        if(e.isDead()) return;
+        if(racket.checkForCollision(e)){
+            e.kill();
+            int add;
+            score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
+            //Log.d("Collision", "Um mosquito foi atingido pela raquete");
+            //Log.d("Score", "Valeu : " + add);
+
+            aliveEnemy--; // Remove um mosquito da lista
+
+            if(aliveEnemy <= 0){
+                nextLevelSprite.visible = true; // Exibe imagem de proximo nível
+                timeOver = System.currentTimeMillis(); // Tempo que o level terminou
             }
         }
     }
 
-    private void checkCollisionCircles() {
-        SimpleCircle circleForDel = null;
-        for (EnemyCircle ec : enemyCircles) {
-            if (mainCircle.isIntercept(ec)) {
-                if (ec.isSmallerThan(mainCircle)) {
-                    mainCircle.growRadius(ec);
-                    circleForDel = ec;
-                    calculateAndSetColor();
-                    break;
-                } else {
-                    gameOver("Your Lose");
-                    return;
-                }
-            }
-        }
-        if (circleForDel != null) {
-            enemyCircles.remove(circleForDel);
-        }
-        if (enemyCircles.isEmpty()) {
-            gameOver("Your Win");
-        }
+    public boolean isNextLevel(){
+        return nextLevelSprite.visible;
     }
 
     private void gameOver(String text) {
@@ -202,6 +250,11 @@ public class GameManager implements IGameLoop {
             ec.moveOnStep();
         }
     }
+
+    public Integer getScore() {
+        return score;
+    }
+
     public static int getWidth()  { return width; }
 
     public static int getHeight() { return height; }

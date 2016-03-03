@@ -8,7 +8,7 @@ import com.antizikagame.GameManager;
  * Created by Thiago on 01/03/2016.
  */
 public class Racket extends Sprite {
-    private static final int MAIN_SPEED = 30;
+    private static final int MAIN_SPEED = 50;
 
     public Racket(int x, int y, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
