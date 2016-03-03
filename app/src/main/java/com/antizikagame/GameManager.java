@@ -3,6 +3,7 @@ package com.antizikagame;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.antizikagame.object.Enemy;
 import com.antizikagame.object.EnemyCircle;
@@ -10,9 +11,13 @@ import com.antizikagame.object.MainCircle;
 import com.antizikagame.object.Racket;
 import com.antizikagame.object.SimpleCircle;
 import com.antizikagame.object.Sprite;
+import com.antizikagame.view.CanvasView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -22,6 +27,9 @@ public class GameManager implements IGameLoop {
 
     public static final int MAX_ENEMY_CIRCLE = 10;
     private static final int TOTAL_ENEMIES = 10;
+
+
+    private static final int TIME_LEVEL_1 = 15;
 
     private CanvasView canvasView;
     private static int width;
@@ -33,6 +41,8 @@ public class GameManager implements IGameLoop {
     private List<Sprite> mSprites;
     private List<Enemy> enemyMosquitos;
     private Racket racket;
+    private ClockManager clock;
+    private SimpleDateFormat clockFormat;
 
     public GameManager(CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
@@ -43,9 +53,20 @@ public class GameManager implements IGameLoop {
         this.height = height;
         //initMainCircle();
         initRacket();
+        initTexts();
         //initEnemyCircles();
         initEnemies();
         initMainLoop();
+    }
+
+    private void initTexts() {
+        // Panel do Tempo
+        Calendar now = Calendar.getInstance();
+        // Formato do relogio
+        clockFormat = new SimpleDateFormat("mm:ss", Locale.getDefault());
+        // Cria o relogio
+        clock = new ClockManager().timeInitial(now.getTimeInMillis()).maxTime(Calendar.SECOND, TIME_LEVEL_1);
+        Log.d("Clock", getClock());
     }
 
     private void initMainLoop() {
@@ -54,10 +75,17 @@ public class GameManager implements IGameLoop {
         gameLoopThread.start();
     }
 
+    public String getClock(){
+        return clockFormat.format(clock.getDif().getTime());
+    }
+
     private void initRacket() {
         Resources res = canvasView.getResources();
-        Bitmap bmp = BitmapFactory.decodeResource(res, R.mipmap.raquete);
-        racket = new Racket(GameManager.getWidth()/2 - bmp.getWidth()/2, height - bmp.getHeight() * 2, bmp, 1, 1);
+        Bitmap bmp = BitmapFactory.decodeResource(res, R.mipmap.raquete_sprite);
+        int rows = 1;
+        int cols = 4;
+        racket = new Racket(GameManager.getWidth()/2 - bmp.getWidth()/2, height - bmp.getHeight() * 2, bmp, rows , cols);
+        mSprites.add(racket);
     }
 
     private void initMainCircle() {
@@ -100,25 +128,20 @@ public class GameManager implements IGameLoop {
 
     @Override
     public void update() {
-        moveEnemies();
+        checkCollision();
+        updateSprites();
+        moveCircles();
+        canvasView.redraw();
     }
 
     public void onDraw() {
         //canvasView.drawCircle(mainCircle);
-        canvasView.drawSprite(racket);
         for (EnemyCircle ec : enemyCircles) {
             canvasView.drawCircle(ec);
         }
         for(Sprite s : mSprites){
             canvasView.drawSprite(s);
         }
-    }
-
-    public void moveEnemies(){
-        checkCollision();
-        updateSprites();
-        moveCircles();
-        canvasView.redraw();
     }
 
     private void updateSprites() {

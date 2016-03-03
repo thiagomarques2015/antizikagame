@@ -12,8 +12,7 @@ public class Racket extends Sprite {
 
     public Racket(int x, int y, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
-
-        setAnimation(0, 0, 1, ANIM_STOP);
+        setAnimation(ANIM_GOBACK); // Seta a animação apenas como "ida" (ciclíca).
         this.x = x;
         this.y = y;
     }

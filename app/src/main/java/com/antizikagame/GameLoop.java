@@ -1,5 +1,7 @@
 package com.antizikagame;
 
+import com.antizikagame.view.CanvasView;
+
 /**
  * Created by Thiago on 25/02/2016.
  */

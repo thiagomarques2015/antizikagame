@@ -1,7 +1,8 @@
-package com.antizikagame;
+package com.antizikagame.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.util.AttributeSet;
@@ -13,10 +14,13 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.antizikagame.GameManager;
+import com.antizikagame.ICanvasView;
 import com.antizikagame.object.SimpleCircle;
 import com.antizikagame.object.Sprite;
 
 /**
+ * Game principal
  * Created by Pavel on 04.01.2016.
  */
 public class CanvasView extends View implements ICanvasView {
@@ -29,6 +33,9 @@ public class CanvasView extends View implements ICanvasView {
     private GameManager gameManager;
 
     private Toast toast;
+    private Paint paintText;
+    private float timeX;
+    private float timeY;
 
     public CanvasView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -48,15 +55,25 @@ public class CanvasView extends View implements ICanvasView {
     }
 
     private void initPaint() {
+        // Sprites
         paint = new Paint();
         paint.setAntiAlias(true);
         paint.setStyle(Paint.Style.FILL);
+
+        // Clock
+        paintText = new Paint();
+        paintText.setColor(Color.WHITE);
+        paintText.setTextSize(35);
+        timeX = width* 0.8f;
+        timeY = height*0.05f;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         this.canvas = canvas;
+        // Relogio
+        canvas.drawText(gameManager.getClock(), timeX, timeY, paintText);
         gameManager.onDraw();
     }
 
