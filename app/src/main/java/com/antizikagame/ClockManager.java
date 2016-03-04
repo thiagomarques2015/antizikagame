@@ -2,7 +2,9 @@ package com.antizikagame;
 
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -12,6 +14,7 @@ import java.util.TimerTask;
  */
 public class ClockManager {
     private static final String LOG = "Time";
+    private final SimpleDateFormat format;
     private Timer T;
 
     private Calendar dif;
@@ -23,6 +26,7 @@ public class ClockManager {
     public ClockManager() {
         T=new Timer();
         T.scheduleAtFixedRate(timerTask, 1000, 1000);
+        format = new SimpleDateFormat("mm:ss", Locale.getDefault());
     }
 
     public void cancel(){
@@ -50,7 +54,7 @@ public class ClockManager {
                     delegate.outTime(timeLimit, dif);
                 }
 
-                ClockManager.this.cancel();
+                pause();
             }
         }
     };
@@ -90,6 +94,15 @@ public class ClockManager {
 
     public boolean isOut() {
         return isOut;
+    }
+
+    public String getTime(){
+        return (getDif() != null)? format.format(getDif().getTime()) : "00:00";
+    }
+
+    public ClockManager pause(){
+        this.dif = null;
+        return this;
     }
 
     public ClockManager timeInitial(long timeInitial) {

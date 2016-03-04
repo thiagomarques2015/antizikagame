@@ -18,7 +18,7 @@ public class Enemy extends Sprite {
     private static final int MOVING_RIGHT = 2;
     private static final int DYING = 3;
 
-    private static final int MAX_SPEED = 7;
+    private static int MAX_SPEED = 7;
     private static final int RANGE_SPEED = MAX_SPEED / 2 - 1; // Range da velocidade
     private static final int GRAVITY = 10;
 
@@ -32,17 +32,25 @@ public class Enemy extends Sprite {
     private int timeStarted;
 
 
-    public Enemy(int x, int y, Random random, Bitmap bmp, int bmp_rows, int bmp_columns) {
+    public Enemy(int x, int y, int speed, Random random, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
+        create(x, y, speed, random);
+    }
 
+    public void create(int x, int y, int speed, Random random){
         this.x = x;
         this.y = y;
+
+        this.MAX_SPEED = speed;
 
         speedX = (random.nextInt(MAX_SPEED) - RANGE_SPEED) + 1; //Velocidade horizontal de -3 a 3.
         speedY = (random.nextInt(MAX_SPEED) - RANGE_SPEED) + 1; //Velocidade vertical de -3 a 3.
 
         checkState();
         setAnimation(frame, firstFrame, firstFrame + CONT, ANIM_GO); // Seta a animação apenas como "ida" (ciclíca).
+
+        dying = false;
+        dead  = false;
     }
 
     @Override
@@ -60,7 +68,9 @@ public class Enemy extends Sprite {
         if(x < 0 || x > GameManager.getWidth()-width){
             speedX *= -1;
             changeDirection();
-        }else if(y < 0 || y > GameManager.getHeight()-height){
+        }
+
+        if(y < 0 || isOutHeightScreem()){
             speedY *= -1;
         }
     }
@@ -164,7 +174,11 @@ public class Enemy extends Sprite {
         return dying || dead;
     }
 
+    public boolean isOutHeightScreem(){
+        return y > GameManager.getHeight()- height - GameManager.getHeight() * 0.15;
+    }
+
     public boolean isAfterDead(){
-        return y + height > GameManager.getHeight() && dead;
+        return isOutHeightScreem() && dead;
     }
 }
