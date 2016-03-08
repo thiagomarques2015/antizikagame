@@ -1,6 +1,7 @@
 package com.antizikagame;
 
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -21,7 +22,6 @@ import java.util.Random;
  */
 public class GameManager implements IGameLoop {
 
-    public static final int MAX_ENEMY_CIRCLE = 10;
     private static final int TOTAL_ENEMIES = 10;
 
     private static final int TIME_LEVEL = 5;
@@ -44,8 +44,9 @@ public class GameManager implements IGameLoop {
     private int score = 0;
     private long startTime; // O tempo que o level foi iniciado
     private Sprite nextLevelSprite; // NextLevel
-    private int aliveEnemy;
-    private long timeOver;
+    private int aliveEnemy; // Total de inimigos vivos
+    private int deadEnemy; // Total de inimigos mortos
+    private long timeOver; // Quando o tempo do level esgotou
     private int timeLevel; // Tempo estimado para o fim do nivel
 
     // Inimigos
@@ -53,6 +54,7 @@ public class GameManager implements IGameLoop {
     int colsEnemy = 4;
     int limitEnemyX, limitEnemyY;
     Bitmap bitmapEnemy;
+    private int mActionBarSize;
 
     public GameManager(CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
@@ -87,10 +89,13 @@ public class GameManager implements IGameLoop {
         startTime = System.currentTimeMillis(); //Define a quantidade de Pinks de acordo com o level
         aliveEnemy = TOTAL_ENEMIES+level; //Define a quantidade de mosquitos de acordo com o level
         timeLevel = (int) Math.max(TIME_LEVEL * 3 - (System.currentTimeMillis() - startTime)/500, 1);
-        int dead = deadEnemies.size()-1;
-        int newEnimies = (dead > 0)? aliveEnemy - dead : 0;
+        int newEnimies = (deadEnemy > 0)? aliveEnemy - deadEnemy : 0;
+        Log.d("Enemy", deadEnemy + " mortos ");
         Log.d("Enemy", aliveEnemy + " vivos ");
         Log.d("Enemy", newEnimies + " novos");
+
+        deadEnemy = 0; // Renicia os inimigos que foram mortos
+
         if(deadEnemies.size() > 0){
             for(Enemy e : deadEnemies){
                 e.create(random.nextInt(limitEnemyX), random.nextInt(limitEnemyY), MAX_SPEED_ENEMY + level, random);
@@ -102,7 +107,7 @@ public class GameManager implements IGameLoop {
         }
         // Adiciona os novos inimigos
         for(int i=0; i<newEnimies; i++){
-            Enemy e = new Enemy(random.nextInt(limitEnemyX), random.nextInt(limitEnemyY), MAX_SPEED_ENEMY + level, random, bitmapEnemy, rowsEnemy, colsEnemy);
+            Enemy e = new Enemy(random.nextInt(limitEnemyX), random.nextInt(limitEnemyY), MAX_SPEED_ENEMY + level, mActionBarSize, random, bitmapEnemy, rowsEnemy, colsEnemy);
             enimies.add(e);
             mSprites.add(e);
         }
@@ -111,6 +116,7 @@ public class GameManager implements IGameLoop {
 
         Log.d("Level", "" + level);
         Log.d("Time Level", "" + timeLevel);
+        Log.d("Enemy", enimies.size() + " na lista");
     }
 
     private void initNextLevel() {
@@ -147,11 +153,21 @@ public class GameManager implements IGameLoop {
 
     private void initEnemies() {
         bitmapEnemy = BitmapFactory.decodeResource(res, R.mipmap.sprite);
-        limitEnemyX = getWidth()-bitmapEnemy.getWidth()/colsEnemy;
+        limitEnemyX = getWidth()-bitmapEnemy.getWidth() / colsEnemy;
         limitEnemyY = getHeight()- bitmapEnemy.getHeight() / rowsEnemy;
 
+        final TypedArray styledAttributes = canvasView.getContext().getTheme().obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
+        // Altura da action bar
+        mActionBarSize = (int) styledAttributes.getDimension(0, 0);
+        styledAttributes.recycle();
+
+        Log.d("Action", mActionBarSize + "px");
+
+        mActionBarSize += 15;
+        limitEnemyY -= mActionBarSize;
+
         for(int i=0; i<aliveEnemy; i++)
-            enimies.add(new Enemy(random.nextInt(limitEnemyX), random.nextInt(limitEnemyY), MAX_SPEED_ENEMY + level, random, bitmapEnemy, rowsEnemy, colsEnemy));
+            enimies.add(new Enemy(random.nextInt(limitEnemyX), random.nextInt(limitEnemyY), MAX_SPEED_ENEMY + level, mActionBarSize, random, bitmapEnemy, rowsEnemy, colsEnemy));
 
         mSprites.addAll(enimies);
     }
@@ -192,16 +208,15 @@ public class GameManager implements IGameLoop {
             int sec = dif.get(Calendar.SECOND);
             // Se passar um 1 segundo depois do gameover fecha
             if(sec > 1)
-                // Inicia o novo nivel
-                newStage();
+                newStage(); // Inicia o novo nivel
         }
         //moveEnemies(); // Acelera todos
     }
 
     private synchronized void checkEnimies(){
 
+        //Log.d("Gameover", "Nao existe mais mosquitos vivos");
         if(aliveEnemy <= 0){
-            //Log.d("Gameover", "Nao existe mais mosquitos vivos");
             return;
         }
 
@@ -215,6 +230,9 @@ public class GameManager implements IGameLoop {
             enimies.removeAll(deadEnemies);
             // Remove os inimigos da lista de sprites
             mSprites.removeAll(deadEnemies);
+
+            if(aliveEnemy <= 0)
+                enimies.clear();
         }
     }
 
@@ -228,19 +246,23 @@ public class GameManager implements IGameLoop {
     private void checkCollision(Enemy e){
         if(e.isDead()) return;
         if(racket.checkForCollision(e)){
-            e.kill();
             int add;
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
             //Log.d("Collision", "Um mosquito foi atingido pela raquete");
             //Log.d("Score", "Valeu : " + add);
 
             aliveEnemy--; // Remove um mosquito da lista
+            deadEnemy++; // Matou um inimigo
 
             if(aliveEnemy <= 0){
                 Log.d("Gameover", "Fim do nivel");
                 nextLevelSprite.visible = true; // Exibe imagem de proximo nível
                 timeOver = System.currentTimeMillis(); // Tempo que o level terminou
+                // Adiciona todos os inimigos na lista de mortos
+                deadEnemies.addAll(enimies);
             }
+
+            e.kill();
         }
     }
 
@@ -268,4 +290,14 @@ public class GameManager implements IGameLoop {
     public static int getWidth()  { return width; }
 
     public static int getHeight() { return height; }
+
+    // Implementar o status
+    public void status() {
+        Log.d("Enemy", "***** STATUS *******");
+        Log.d("Enemy", aliveEnemy + " vivo");
+        Log.d("Enemy", deadEnemy + " mortos");
+        Log.d("Enemy", mSprites.size() + " sprites");
+        Log.d("Enemy", enimies.size() + " na lista de ativos");
+        Log.d("Enemy", deadEnemies.size() + " na lista de mortos");
+    }
 }

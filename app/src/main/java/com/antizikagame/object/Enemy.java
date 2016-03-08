@@ -30,10 +30,12 @@ public class Enemy extends Sprite {
     private boolean dying;
     private boolean dead;
     private int timeStarted;
+    private int actionBarHeight;
 
 
-    public Enemy(int x, int y, int speed, Random random, Bitmap bmp, int bmp_rows, int bmp_columns) {
+    public Enemy(int x, int y, int speed, int actionBarHeight, Random random, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
+        this.actionBarHeight = actionBarHeight;
         create(x, y, speed, random);
     }
 
@@ -175,7 +177,7 @@ public class Enemy extends Sprite {
     }
 
     public boolean isOutHeightScreem(){
-        return y > GameManager.getHeight()- height - GameManager.getHeight() * 0.15;
+        return y > GameManager.getHeight()- height - actionBarHeight;
     }
 
     public boolean isAfterDead(){

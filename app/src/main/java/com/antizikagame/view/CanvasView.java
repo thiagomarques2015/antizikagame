@@ -93,8 +93,11 @@ public class CanvasView extends View implements ICanvasView {
         // Score
         canvas.drawText(String.format(getContext().getString(R.string.score), gameManager.getScore().toString()), scoreX, scoreY, paintText);
 
+        String nextLevel = getContext().getString(R.string.next_level_msg);
+        float w = paintNext.measureText(nextLevel, 0, nextLevel.length());
+
         if(gameManager.isNextLevel())
-            canvas.drawText(getContext().getString(R.string.next_level_msg), 50, getHeight()*0.7f, paintNext);
+            canvas.drawText(nextLevel, getWidth()/2 - w/2, getHeight()*0.7f, paintNext);
 
         gameManager.onDraw();
     }
@@ -130,8 +133,15 @@ public class CanvasView extends View implements ICanvasView {
     public boolean onTouchEvent(MotionEvent event) {
         int x = (int) event.getX();
         int y = (int) event.getY();
-        if (event.getAction() == MotionEvent.ACTION_MOVE) {
-            gameManager.onTouchEvent(x, y);
+
+        switch (event.getAction()){
+            case MotionEvent.ACTION_MOVE :
+                gameManager.onTouchEvent(x, y);
+                break;
+            case MotionEvent.ACTION_UP:
+                //Log.d("Click", "Evento + " + event.getAction());
+                gameManager.status();
+                break;
         }
         invalidate();
         return true;
