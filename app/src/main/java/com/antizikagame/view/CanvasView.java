@@ -6,15 +6,16 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.antizikagame.R;
 import com.antizikagame.control.GameManager;
 import com.antizikagame.control.ICanvasView;
-import com.antizikagame.R;
 import com.antizikagame.object.SimpleCircle;
 import com.antizikagame.object.Sprite;
 
@@ -55,6 +56,8 @@ public class CanvasView extends View implements ICanvasView {
         width = point.x;
         height = point.y;
     }
+
+
 
     private void initPaint() {
         // Sprites
@@ -114,6 +117,19 @@ public class CanvasView extends View implements ICanvasView {
     @Override
     public void redraw() {
         invalidate();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+
+        Log.d("Canvas", "Ganhou focus? " + hasWindowFocus);
+
+        if(hasWindowFocus){
+            gameManager.startSensor();
+        }else{
+            gameManager.pauseSensor();
+        }
     }
 
     @Override

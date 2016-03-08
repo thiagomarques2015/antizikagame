@@ -21,6 +21,10 @@ public class GameLoop extends Thread {
         running = run;
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
     private Runnable onDraw = new Runnable() {
         @Override
         public void run() {

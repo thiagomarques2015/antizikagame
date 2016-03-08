@@ -18,6 +18,7 @@ public class Enemy extends Sprite {
     private static final int MOVING_RIGHT = 2;
     private static final int DYING = 3;
 
+    private static int LIMIT_MAX_SPEED = 23;
     private static int MAX_SPEED = 7;
     private static final int RANGE_SPEED = MAX_SPEED / 2 - 1; // Range da velocidade
     private static final int GRAVITY = 10;
@@ -43,7 +44,7 @@ public class Enemy extends Sprite {
         this.x = x;
         this.y = y;
 
-        this.MAX_SPEED = speed;
+        this.MAX_SPEED = (speed < LIMIT_MAX_SPEED)? speed : LIMIT_MAX_SPEED;
 
         speedX = (random.nextInt(MAX_SPEED) - RANGE_SPEED) + 1; //Velocidade horizontal de -3 a 3.
         speedY = (random.nextInt(MAX_SPEED) - RANGE_SPEED) + 1; //Velocidade vertical de -3 a 3.

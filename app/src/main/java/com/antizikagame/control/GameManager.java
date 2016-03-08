@@ -6,11 +6,16 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.util.Log;
 
 import com.antizikagame.R;
 import com.antizikagame.object.Enemy;
 import com.antizikagame.object.EnemyCircle;
+import com.antizikagame.object.Pneu;
 import com.antizikagame.object.Racket;
 import com.antizikagame.object.Sprite;
 import com.antizikagame.view.CanvasView;
@@ -32,6 +37,7 @@ public class GameManager implements IGameLoop {
     private static final int MAX_SPEED_ENEMY = 7;
     private final Random random;
     private final Resources res;
+    private final Context context;
 
     private CanvasView canvasView;
     private static int width;
@@ -59,9 +65,18 @@ public class GameManager implements IGameLoop {
     int limitEnemyX, limitEnemyY;
     Bitmap bitmapEnemy;
     private int mActionBarSize;
+    private SensorManager senSensorManager;
+    private Sensor senAccelerometer;
+
+
+    // Sensor
+    private long lastUpdate;
+    private float lastX;
+    private static float deltaX;
 
     public GameManager(CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
+        this.context = canvasView.getContext();
         mSprites = new ArrayList<>();
         enemyCircles = new ArrayList<>();
         enimies = new ArrayList<>();
@@ -78,7 +93,58 @@ public class GameManager implements IGameLoop {
         initRacket();
         //initEnemyCircles();
         initEnemies();
+        initPneu();
         initMainLoop();
+        initSensor();
+    }
+
+    private void initSensor() {
+        senSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        senSensorManager.registerListener(onSensorListener, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    public static float getDeltaX() {
+        return deltaX;
+    }
+
+    private SensorEventListener onSensorListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent sensorEvent) {
+            Sensor mySensor = sensorEvent.sensor;
+
+            if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                float x = sensorEvent.values[0];
+                float y = sensorEvent.values[1];
+                float z = sensorEvent.values[2];
+
+                // get the change of the x,y,z values of the accelerometer
+                deltaX = Math.abs(lastX - x);
+
+                lastX = x;
+
+                long curTime = System.currentTimeMillis();
+
+                if ((curTime - lastUpdate) > 2000) {
+                    long diffTime = (curTime - lastUpdate);
+                    lastUpdate = curTime;
+                    //Log.d("Sensor", String.format("X : %s, Y : %s, Z : %s  | AcelX : %s", x, y, z, deltaX));
+                }
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int i) {
+
+        }
+    };
+
+    public void startSensor(){
+        senSensorManager.registerListener(onSensorListener, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    public void pauseSensor(){
+        senSensorManager.unregisterListener(onSensorListener);
     }
 
     private void initMainLoop() {
@@ -145,6 +211,14 @@ public class GameManager implements IGameLoop {
 
     public String getClock(){
         return clock.getTime();
+    }
+
+    private void initPneu() {
+        Bitmap bmp = BitmapFactory.decodeResource(res, R.mipmap.pneu);
+        int rows = 1;
+        int cols = 3;
+        Pneu pneu = new Pneu(GameManager.getWidth() / 2 - bmp.getWidth() / 2, 0, height - mActionBarSize - 15, bmp, rows, cols);
+        mSprites.add(pneu);
     }
 
     private void initRacket() {
@@ -254,6 +328,7 @@ public class GameManager implements IGameLoop {
     private void checkCollision(Enemy e){
         if(e.isDead()) return;
         if(racket.checkForCollision(e)){
+            e.kill();
             int add;
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
             //Log.d("Collision", "Um mosquito foi atingido pela raquete");
@@ -270,8 +345,6 @@ public class GameManager implements IGameLoop {
                 // Adiciona todos os inimigos na lista de mortos
                 deadEnemies.addAll(enimies);
             }
-
-            e.kill();
         }
     }
 
@@ -286,6 +359,10 @@ public class GameManager implements IGameLoop {
         Intent intent = new Intent(ctx, GameOverActivity.class);
         intent.putExtra("score", score);
         ctx.startActivity(intent);
+    }
+
+    public boolean isGameOver(){
+        return gameLoopThread != null && gameLoopThread.isRunning();
     }
 
     private void moveCircles() {
