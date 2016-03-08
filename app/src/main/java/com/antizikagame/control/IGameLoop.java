@@ -1,4 +1,4 @@
-package com.antizikagame;
+package com.antizikagame.control;
 
 /**
  * Created by Thiago on 01/03/2016.

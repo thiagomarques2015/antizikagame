@@ -1,4 +1,4 @@
-package com.antizikagame;
+package com.antizikagame.control;
 
 import com.antizikagame.view.CanvasView;
 

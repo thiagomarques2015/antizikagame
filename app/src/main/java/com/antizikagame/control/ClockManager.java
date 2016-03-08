@@ -1,4 +1,4 @@
-package com.antizikagame;
+package com.antizikagame.control;
 
 import android.util.Log;
 
@@ -22,6 +22,7 @@ public class ClockManager {
     private long timesInitial;
     private int timeLimit;
     private boolean isOut;
+    private boolean isPaused;
 
     public ClockManager() {
         T=new Timer();
@@ -36,6 +37,7 @@ public class ClockManager {
     private TimerTask timerTask = new TimerTask() {
         @Override
         public void run() {
+            if(isPaused) return;
             // Verifica todos os relogios ativos se o tempo ja foi esgotado ou ainda esta em progresso
             if(dif == null) return;
             // Diminui um segundo no tempo restante
@@ -54,7 +56,7 @@ public class ClockManager {
                     delegate.outTime(timeLimit, dif);
                 }
 
-                pause();
+                stop();
             }
         }
     };
@@ -96,11 +98,15 @@ public class ClockManager {
         return isOut;
     }
 
+    public void setPause(boolean isPaused) {
+        this.isPaused = isPaused;
+    }
+
     public String getTime(){
         return (getDif() != null)? format.format(getDif().getTime()) : "00:00";
     }
 
-    public ClockManager pause(){
+    public ClockManager stop(){
         this.dif = null;
         return this;
     }

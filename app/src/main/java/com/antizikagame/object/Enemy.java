@@ -3,7 +3,7 @@ package com.antizikagame.object;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
 
-import com.antizikagame.GameManager;
+import com.antizikagame.control.GameManager;
 
 import java.util.Calendar;
 import java.util.Random;

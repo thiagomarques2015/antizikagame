@@ -1,16 +1,20 @@
-package com.antizikagame;
+package com.antizikagame.control;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import com.antizikagame.R;
 import com.antizikagame.object.Enemy;
 import com.antizikagame.object.EnemyCircle;
 import com.antizikagame.object.Racket;
 import com.antizikagame.object.Sprite;
 import com.antizikagame.view.CanvasView;
+import com.antizikagame.view.GameOverActivity;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -134,7 +138,7 @@ public class GameManager implements IGameLoop {
             clock = new ClockManager();
         }
 
-        clock.timeInitial(now.getTimeInMillis()).maxTime(Calendar.SECOND, timeLevel);
+        clock.timeInitial(now.getTimeInMillis()).maxTime(Calendar.SECOND, timeLevel).setPause(false);
 
         Log.d("Clock", getClock());
     }
@@ -174,6 +178,10 @@ public class GameManager implements IGameLoop {
 
     @Override
     public void update() {
+        if(clock.isOut()){
+            gameOver("Game Over, você foi muito bem! Mas não basta apenas matar os mosquitos, você precisa eliminar os focos e evita qualquer criadouro com água parada.");
+            return;
+        }
         checkEnimies();
         updateSprites();
         moveCircles();
@@ -256,6 +264,7 @@ public class GameManager implements IGameLoop {
 
             if(aliveEnemy <= 0){
                 Log.d("Gameover", "Fim do nivel");
+                clock.setPause(true); // Pausa o relogio
                 nextLevelSprite.visible = true; // Exibe imagem de proximo nível
                 timeOver = System.currentTimeMillis(); // Tempo que o level terminou
                 // Adiciona todos os inimigos na lista de mortos
@@ -272,9 +281,11 @@ public class GameManager implements IGameLoop {
 
     private void gameOver(String text) {
         gameLoopThread.setRunning(false);
-        canvasView.showMessage(text);
-        canvasView.redraw();
-
+        Log.d("Game", "Mesagem : " + text);
+        Context ctx = canvasView.getContext();
+        Intent intent = new Intent(ctx, GameOverActivity.class);
+        intent.putExtra("score", score);
+        ctx.startActivity(intent);
     }
 
     private void moveCircles() {

@@ -1,4 +1,4 @@
-package com.antizikagame;
+package com.antizikagame.control;
 
 import com.antizikagame.object.SimpleCircle;
 import com.antizikagame.object.Sprite;
@@ -10,5 +10,4 @@ public interface ICanvasView {
     void drawCircle(SimpleCircle mainCircle);
     void drawSprite(Sprite sprite);
     void redraw();
-    void showMessage(String text);
 }

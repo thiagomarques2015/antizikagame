@@ -2,7 +2,7 @@ package com.antizikagame.object;
 
 import android.graphics.Color;
 
-import com.antizikagame.GameManager;
+import com.antizikagame.control.GameManager;
 
 /**
  * Created by Pavel on 04.01.2016.
