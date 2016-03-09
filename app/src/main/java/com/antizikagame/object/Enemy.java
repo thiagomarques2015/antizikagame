@@ -68,12 +68,12 @@ public class Enemy extends Sprite {
         this.y += speedY;
         this.x += speedX;
 
-        if(x < 0 || x > GameManager.getWidth()-width){
+        if(x < -width*2 || x > GameManager.getWidth()+width*2){
             speedX *= -1;
             changeDirection();
         }
 
-        if(y < 0 || isOutHeightScreem()){
+        if(y < -height*2 || isOutHeightScreem()){
             speedY *= -1;
         }
     }
@@ -141,7 +141,6 @@ public class Enemy extends Sprite {
                 frame = 12;
                 break;
         }
-
 
     }
 

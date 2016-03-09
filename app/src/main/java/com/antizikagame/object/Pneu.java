@@ -15,15 +15,21 @@ public class Pneu extends Sprite {
     private int speedY;
     private int timeStarted;
     private float frameTime = 3.666f;
+    private boolean dead;
 
     public Pneu(int x, int y, int finalY, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
+        this.finalY = finalY;
+        create(x, y);
+        setAnimation(0, 0, 1, ANIM_STOP);
+    }
 
+    public Pneu create(int x, int y){
         this.x = x;
         this.y = y;
-        this.finalY = finalY;
-        setAnimation(0, 0, 1, ANIM_STOP);
         timeStarted = getTime();
+        dead = false;
+        return this;
     }
 
     private int getTime(){
@@ -53,12 +59,18 @@ public class Pneu extends Sprite {
 //        float yS = (yVelocity/2)*frameTime;
         this.x += xS;
 
-        if(x < 0){
-            x = 0;
+        if(x < -width){
+            dead = true;
+            x = -width;
         }
 
-        if(x > GameManager.getWidth()-width){
-            x = GameManager.getWidth()-width;
+        if(x > GameManager.getWidth()+width){
+            dead = true;
+            x = GameManager.getWidth()+width;
         }
+    }
+
+    public boolean isDead() {
+        return dead;
     }
 }

@@ -68,6 +68,8 @@ public class GameManager implements IGameLoop {
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
 
+    // Tarefas
+    private Pneu pneu;
 
     // Sensor
     private long lastUpdate;
@@ -225,7 +227,7 @@ public class GameManager implements IGameLoop {
         Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.pneu);
         int rows = 1;
         int cols = 3;
-        Pneu pneu = new Pneu(width / 2 - bmp.getWidth() / 2, 0, height - mActionBarSize - 15, bmp, rows, cols);
+        pneu = new Pneu(width / 2 - bmp.getWidth() / 2, 0, height - mActionBarSize - 15, bmp, rows, cols);
         mSprites.add(pneu);
     }
 
@@ -271,10 +273,6 @@ public class GameManager implements IGameLoop {
         canvasView.redraw();
     }
 
-    private void checkPneu() {
-
-    }
-
     public void onDraw() {
         //canvasView.drawCircle(mainCircle);
         for (EnemyCircle ec : enemyCircles) {
@@ -306,6 +304,10 @@ public class GameManager implements IGameLoop {
                 newStage(); // Inicia o novo nivel
         }
         //moveEnemies(); // Acelera todos
+    }
+
+    private void checkPneu() {
+        
     }
 
     private synchronized void checkEnimies(){
