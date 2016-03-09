@@ -68,21 +68,25 @@ public class CanvasView extends View implements ICanvasView {
         // Clock
         paintClock = new Paint();
         paintClock.setColor(Color.WHITE);
-        paintClock.setTextSize(35);
+        paintClock.setTextSize(getTextSize(R.dimen.clock_size));
         timeX = width* 0.8f;
         timeY = height*0.05f;
 
         // Next Level
         paintNext = new Paint();
         paintNext.setColor(Color.parseColor("#1f1a17"));
-        paintNext.setTextSize(20);
+        paintNext.setTextSize(getTextSize(R.dimen.next_level_size));
 
         // Score
         paintText = new Paint();
         paintText.setColor(Color.WHITE);
-        paintText.setTextSize(20);
+        paintText.setTextSize(getTextSize(R.dimen.score_size));
         scoreX = width* 0.05f;
         scoreY = height*0.05f;
+    }
+
+    private float getTextSize(int id){
+        return getContext().getResources().getDimensionPixelOffset(id);
     }
 
     @Override

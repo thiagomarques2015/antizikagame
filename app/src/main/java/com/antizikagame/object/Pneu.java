@@ -14,6 +14,7 @@ public class Pneu extends Sprite {
     private final int finalY;
     private int speedY;
     private int timeStarted;
+    private float frameTime = 3.666f;
 
     public Pneu(int x, int y, int finalY, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
@@ -33,16 +34,31 @@ public class Pneu extends Sprite {
     public void update() {
         super.update();
 
-        this.x += GameManager.getDeltaX();
+        int time = getTime() - timeStarted;
+        speedY = speedY + GRAVITY  + time;
+        this.y += speedY;
 
         if(y > finalY){
-            return;
+            this.y = finalY;
         }
 
-        int time = getTime() - timeStarted;
+        float xAcceleration = GameManager.getxAcceleration();
 
-        speedY = speedY + GRAVITY  + time;
+        //Calculate new speed
+        float xVelocity = (xAcceleration * frameTime);
+//        yVelocity += (yAcceleration * frameTime);
 
-        this.y += speedY;
+        //Calc distance travelled in that time
+        float xS = (xVelocity/2)*frameTime;
+//        float yS = (yVelocity/2)*frameTime;
+        this.x += xS;
+
+        if(x < 0){
+            x = 0;
+        }
+
+        if(x > GameManager.getWidth()-width){
+            x = GameManager.getWidth()-width;
+        }
     }
 }

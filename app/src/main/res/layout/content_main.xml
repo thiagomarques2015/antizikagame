@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.pavel.dolbik.antizikagame.MainActivity"
-    android:background="@mipmap/background">
+    android:background="@drawable/background">
 
     <com.antizikagame.view.CanvasView
         android:layout_width="match_parent"

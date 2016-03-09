@@ -2,8 +2,6 @@ package com.antizikagame.object;
 
 import android.graphics.Bitmap;
 
-import com.antizikagame.control.GameManager;
-
 /**
  * Created by Thiago on 01/03/2016.
  */
@@ -13,13 +11,14 @@ public class Racket extends Sprite {
     public Racket(int x, int y, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
         setAnimation(ANIM_GOBACK); // Seta a animação apenas como "ida" (ciclíca).
+        this.height =
         this.x = x;
         this.y = y;
     }
 
     public void move(int x1, int y1) {
-        int dx = (x1 - x) * MAIN_SPEED / GameManager.getWidth();
-        int dy = (y1 - y) * MAIN_SPEED / GameManager.getHeight();
+        int dx = (x1 - x) - width / 2;
+        int dy = (y1 - y) - height / 2;
         x += dx;
         y += dy;
     }

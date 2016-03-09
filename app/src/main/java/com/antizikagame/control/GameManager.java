@@ -72,7 +72,7 @@ public class GameManager implements IGameLoop {
     // Sensor
     private long lastUpdate;
     private float lastX;
-    private static float deltaX;
+    private static float xAcceleration;
 
     public GameManager(CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
@@ -104,8 +104,8 @@ public class GameManager implements IGameLoop {
         senSensorManager.registerListener(onSensorListener, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-    public static float getDeltaX() {
-        return deltaX;
+    public static float getxAcceleration() {
+        return xAcceleration;
     }
 
     private SensorEventListener onSensorListener = new SensorEventListener() {
@@ -118,8 +118,16 @@ public class GameManager implements IGameLoop {
                 float y = sensorEvent.values[1];
                 float z = sensorEvent.values[2];
 
+                /*final float alpha = 0.8f;
+                float gravity = alpha * SensorManager.GRAVITY_EARTH + (1 - alpha) * x;*/
+
+                float dif = lastX - x;
+
                 // get the change of the x,y,z values of the accelerometer
-                deltaX = Math.abs(lastX - x);
+                //xAcceleration = Math.abs(dif);
+//                xAcceleration = dif;
+                xAcceleration = x * -1;
+//                xAcceleration = x - gravity;
 
                 lastX = x;
 
@@ -128,7 +136,7 @@ public class GameManager implements IGameLoop {
                 if ((curTime - lastUpdate) > 2000) {
                     long diffTime = (curTime - lastUpdate);
                     lastUpdate = curTime;
-                    //Log.d("Sensor", String.format("X : %s, Y : %s, Z : %s  | AcelX : %s", x, y, z, deltaX));
+                    Log.d("Sensor", String.format("X : %s, Y : %s, Z : %s  | AcelX : %s | Dif : %s", x, y, z, xAcceleration, dif));
                 }
             }
         }
@@ -190,7 +198,7 @@ public class GameManager implements IGameLoop {
     }
 
     private void initNextLevel() {
-        mSprites.add(nextLevelSprite = new Sprite(BitmapFactory.decodeResource(res, R.mipmap.next_level)));
+        mSprites.add(nextLevelSprite = new Sprite(BitmapFactory.decodeResource(res, R.drawable.next_level)));
         nextLevelSprite.x = getWidth()/2 - nextLevelSprite.width/2;
         nextLevelSprite.y = (int) (getHeight()*0.2f);
         nextLevelSprite.visible = false;
@@ -214,15 +222,15 @@ public class GameManager implements IGameLoop {
     }
 
     private void initPneu() {
-        Bitmap bmp = BitmapFactory.decodeResource(res, R.mipmap.pneu);
+        Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.pneu);
         int rows = 1;
         int cols = 3;
-        Pneu pneu = new Pneu(GameManager.getWidth() / 2 - bmp.getWidth() / 2, 0, height - mActionBarSize - 15, bmp, rows, cols);
+        Pneu pneu = new Pneu(width / 2 - bmp.getWidth() / 2, 0, height - mActionBarSize - 15, bmp, rows, cols);
         mSprites.add(pneu);
     }
 
     private void initRacket() {
-        Bitmap bmp = BitmapFactory.decodeResource(res, R.mipmap.raquete_sprite);
+        Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.raquete_sprite);
         int rows = 1;
         int cols = 4;
         racket = new Racket(GameManager.getWidth()/2 - bmp.getWidth() /2, height - bmp.getHeight() * 2, bmp, rows , cols);
@@ -230,7 +238,7 @@ public class GameManager implements IGameLoop {
     }
 
     private void initEnemies() {
-        bitmapEnemy = BitmapFactory.decodeResource(res, R.mipmap.sprite);
+        bitmapEnemy = BitmapFactory.decodeResource(res, R.drawable.sprite);
         limitEnemyX = getWidth()-bitmapEnemy.getWidth() / colsEnemy;
         limitEnemyY = getHeight()- bitmapEnemy.getHeight() / rowsEnemy;
 
@@ -257,9 +265,14 @@ public class GameManager implements IGameLoop {
             return;
         }
         checkEnimies();
+        checkPneu();
         updateSprites();
         moveCircles();
         canvasView.redraw();
+    }
+
+    private void checkPneu() {
+
     }
 
     public void onDraw() {
