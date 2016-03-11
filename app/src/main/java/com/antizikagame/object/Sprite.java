@@ -78,7 +78,6 @@ public class Sprite {
             int srcY = this.currentFrame / this.BMP_COLUMNS * this.height;
             canvas.drawBitmap(this.mBitmap, new Rect(srcX, srcY, srcX + this.width, srcY + this.height), new Rect(this.x, this.y, this.x + this.width, this.y + this.height), this.mPaint);
         }
-
     }
 
     public void setFirstFrame(int frame) {

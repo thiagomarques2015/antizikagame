@@ -39,6 +39,7 @@ public class CanvasView extends View implements ICanvasView {
     private float scoreX;
     private float scoreY;
     private Paint paintNext;
+    public static Paint paintHit;
 
     public CanvasView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -64,6 +65,11 @@ public class CanvasView extends View implements ICanvasView {
         paint = new Paint();
         paint.setAntiAlias(true);
         paint.setStyle(Paint.Style.FILL);
+
+        // Hit
+        paintHit = new Paint();
+        paintHit.setColor(Color.WHITE);
+        paintHit.setTextSize(getTextSize(R.dimen.point_size));
 
         // Clock
         paintClock = new Paint();
@@ -152,5 +158,9 @@ public class CanvasView extends View implements ICanvasView {
         }
         invalidate();
         return true;
+    }
+
+    public static Paint getPaintHit() {
+        return paintHit;
     }
 }

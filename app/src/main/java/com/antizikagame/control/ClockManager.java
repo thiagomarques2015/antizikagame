@@ -106,6 +106,10 @@ public class ClockManager {
         return (getDif() != null)? format.format(getDif().getTime()) : "00:00";
     }
 
+    public int getSecond(){
+        return (getDif() != null)? getDif().get(Calendar.SECOND) : 0;
+    }
+
     public ClockManager stop(){
         this.dif = null;
         return this;

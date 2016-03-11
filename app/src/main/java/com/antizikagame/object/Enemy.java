@@ -1,9 +1,10 @@
 package com.antizikagame.object;
 
 import android.graphics.Bitmap;
-import android.graphics.Paint;
+import android.graphics.Canvas;
 
 import com.antizikagame.control.GameManager;
+import com.antizikagame.view.CanvasView;
 
 import java.util.Calendar;
 import java.util.Random;
@@ -30,8 +31,12 @@ public class Enemy extends Sprite {
     private final int CONT = 4;
     private boolean dying;
     private boolean dead;
+    private boolean hit;
     private int timeStarted;
     private int actionBarHeight;
+    public int deadY;
+    public int deadX;
+    public int score;
 
 
     public Enemy(int x, int y, int speed, int actionBarHeight, Random random, Bitmap bmp, int bmp_rows, int bmp_columns) {
@@ -54,6 +59,7 @@ public class Enemy extends Sprite {
 
         dying = false;
         dead  = false;
+        hit = false;
     }
 
     @Override
@@ -102,6 +108,10 @@ public class Enemy extends Sprite {
 
     public void kill(){
         if(isDead()) return;
+        // Salva a posicao do ponto
+        hit = true;
+        this.deadX = x;
+        this.deadY = y;
         // Mata o inimigo
         dying = true;
         timeStarted = getTime();
@@ -109,7 +119,16 @@ public class Enemy extends Sprite {
         speedY = 0;
         // Muda a direcao dele para baixo
         changeDirection();
-        mPaint = new Paint();
+    }
+
+    @Override
+    public void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        if(isHit()){
+            showingHit();
+            canvas.drawText("+" + score, deadX, deadY, CanvasView.getPaintHit());
+        }
     }
 
     /**
@@ -174,6 +193,14 @@ public class Enemy extends Sprite {
 
     public boolean isDead() {
         return dying || dead;
+    }
+
+    public boolean isHit() {
+        return hit;
+    }
+
+    public void showingHit(){
+        hit = true;
     }
 
     public boolean isOutHeightScreem(){

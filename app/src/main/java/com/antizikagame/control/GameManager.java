@@ -14,7 +14,6 @@ import android.util.Log;
 
 import com.antizikagame.R;
 import com.antizikagame.object.Enemy;
-import com.antizikagame.object.EnemyCircle;
 import com.antizikagame.object.Pneu;
 import com.antizikagame.object.Racket;
 import com.antizikagame.object.Sprite;
@@ -39,11 +38,10 @@ public class GameManager implements IGameLoop {
     private final Resources res;
     private final Context context;
 
-    private CanvasView canvasView;
+    private ICanvasView canvasView;
     private static int width;
     private static int height;
 
-    private ArrayList<EnemyCircle> enemyCircles;
     private GameLoop gameLoopThread;
     private List<Sprite> mSprites;
     private List<Enemy> enimies;
@@ -70,6 +68,8 @@ public class GameManager implements IGameLoop {
 
     // Tarefas
     private Pneu pneu;
+    private int limitPneuX;
+    private int limitPneuY;
 
     // Sensor
     private long lastUpdate;
@@ -80,7 +80,6 @@ public class GameManager implements IGameLoop {
         this.canvasView = canvasView;
         this.context = canvasView.getContext();
         mSprites = new ArrayList<>();
-        enemyCircles = new ArrayList<>();
         enimies = new ArrayList<>();
         deadEnemies = new ArrayList<>();
 
@@ -96,7 +95,7 @@ public class GameManager implements IGameLoop {
         //initEnemyCircles();
         initEnemies();
         initPneu();
-        initMainLoop();
+        initMainLoop(canvasView);
         initSensor();
     }
 
@@ -157,13 +156,18 @@ public class GameManager implements IGameLoop {
         senSensorManager.unregisterListener(onSensorListener);
     }
 
-    private void initMainLoop() {
+    private void initMainLoop(CanvasView canvasView) {
         gameLoopThread = new GameLoop(this, canvasView);
         gameLoopThread.setRunning(true);
         gameLoopThread.start();
     }
 
     private void newStage() {
+        // Adiciona todos os inimigos na lista de mortos
+        deadEnemies.addAll(enimies);
+        // Limpa a lista de inimigos na lista
+        enimies.clear();
+
         level++; // Avanca um nivel
         nextLevelSprite.visible = false; //Deixa a mensagem e imagem de proximo level invisiveis
         startTime = System.currentTimeMillis(); //Define a quantidade de Pinks de acordo com o level
@@ -227,8 +231,9 @@ public class GameManager implements IGameLoop {
         Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.pneu);
         int rows = 1;
         int cols = 3;
-        pneu = new Pneu(width / 2 - bmp.getWidth() / 2, 0, height - mActionBarSize - 15, bmp, rows, cols);
-        mSprites.add(pneu);
+        limitPneuX = width / 2 - bmp.getWidth() / 2;
+        limitPneuY = 0;
+        pneu = new Pneu(limitPneuX, limitPneuY , height - mActionBarSize - 15, bmp, rows, cols);
     }
 
     private void initRacket() {
@@ -244,7 +249,7 @@ public class GameManager implements IGameLoop {
         limitEnemyX = getWidth()-bitmapEnemy.getWidth() / colsEnemy;
         limitEnemyY = getHeight()- bitmapEnemy.getHeight() / rowsEnemy;
 
-        final TypedArray styledAttributes = canvasView.getContext().getTheme().obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
+        final TypedArray styledAttributes = context.getTheme().obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
         // Altura da action bar
         mActionBarSize = (int) styledAttributes.getDimension(0, 0);
         styledAttributes.recycle();
@@ -269,15 +274,10 @@ public class GameManager implements IGameLoop {
         checkEnimies();
         checkPneu();
         updateSprites();
-        moveCircles();
         canvasView.redraw();
     }
 
     public void onDraw() {
-        //canvasView.drawCircle(mainCircle);
-        for (EnemyCircle ec : enemyCircles) {
-            canvasView.drawCircle(ec);
-        }
         for(Sprite s : mSprites){
             canvasView.drawSprite(s);
         }
@@ -296,9 +296,7 @@ public class GameManager implements IGameLoop {
             racket.move(x, y);
         }else{
             //Log.d("Gameover", "Nao existe mais inimigos");
-            Calendar dif = Calendar.getInstance();
-            dif.setTimeInMillis(System.currentTimeMillis() - timeOver);
-            int sec = dif.get(Calendar.SECOND);
+            int sec = getTimeAfterStageOver();
             // Se passar um 1 segundo depois do gameover fecha
             if(sec > 1)
                 newStage(); // Inicia o novo nivel
@@ -306,8 +304,29 @@ public class GameManager implements IGameLoop {
         //moveEnemies(); // Acelera todos
     }
 
+    private int getTimeAfterStageOver() {
+        Calendar dif = Calendar.getInstance();
+        dif.setTimeInMillis(System.currentTimeMillis() - timeOver);
+        int sec = dif.get(Calendar.SECOND);
+        return sec;
+    }
+
     private void checkPneu() {
-        
+
+        // Se chegar em 5 segundos adiciona o pneu
+        if( clock.getSecond() == 5 ){
+            pneu.create(random.nextInt(limitPneuX), limitPneuY);
+            mSprites.add(pneu);
+            return;
+        }
+
+        if(pneu.isDead()){
+            Log.d("Pneu", "+1 Pneu removido" );
+            int add;
+            score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
+            Log.d("Score", "Valeu : " + add);
+            mSprites.remove(pneu);
+        }
     }
 
     private synchronized void checkEnimies(){
@@ -320,6 +339,14 @@ public class GameManager implements IGameLoop {
         for (Enemy e : enimies) {
             checkCollision(e);
             checkIfDead(e);
+        }
+
+        int sec = getTimeAfterStageOver();
+
+        // Atrasa a morte do ultimo inimigo em 1 segundo, para da tempo de aparecer a animacao da morte
+        if(aliveEnemy <= 0){
+            if(sec <= 1)
+                return;
         }
 
         if(deadEnemies.size() > 0){
@@ -346,6 +373,7 @@ public class GameManager implements IGameLoop {
             e.kill();
             int add;
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
+            e.score = add;
             //Log.d("Collision", "Um mosquito foi atingido pela raquete");
             //Log.d("Score", "Valeu : " + add);
 
@@ -357,8 +385,6 @@ public class GameManager implements IGameLoop {
                 clock.setPause(true); // Pausa o relogio
                 nextLevelSprite.visible = true; // Exibe imagem de proximo nível
                 timeOver = System.currentTimeMillis(); // Tempo que o level terminou
-                // Adiciona todos os inimigos na lista de mortos
-                deadEnemies.addAll(enimies);
             }
         }
     }
@@ -370,7 +396,7 @@ public class GameManager implements IGameLoop {
     private void gameOver(String text) {
         gameLoopThread.setRunning(false);
         Log.d("Game", "Mesagem : " + text);
-        Context ctx = canvasView.getContext();
+        Context ctx = context;
         Intent intent = new Intent(ctx, GameOverActivity.class);
         intent.putExtra("score", score);
         ctx.startActivity(intent);
@@ -378,12 +404,6 @@ public class GameManager implements IGameLoop {
 
     public boolean isGameOver(){
         return gameLoopThread != null && gameLoopThread.isRunning();
-    }
-
-    private void moveCircles() {
-        for (EnemyCircle ec : enemyCircles) {
-            ec.moveOnStep();
-        }
     }
 
     public Integer getScore() {
