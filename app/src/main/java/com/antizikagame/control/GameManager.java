@@ -34,6 +34,10 @@ public class GameManager implements IGameLoop {
 
     private static final int TIME_LEVEL = 5;
     private static final int MAX_SPEED_ENEMY = 7;
+    private static final int MAX_PNEU_TIME = 70;
+    private static final int MIN_PNEU_TIME = 20;
+    private int MIN_ENEMY_DEAD;
+    private int NEXT_PNEU_TIME;
     private final Random random;
     private final Resources res;
     private final Context context;
@@ -66,15 +70,18 @@ public class GameManager implements IGameLoop {
     private SensorManager senSensorManager;
     private Sensor senAccelerometer;
 
-    // Tarefas
+    // Pneu
     private Pneu pneu;
     private int limitPneuX;
     private int limitPneuY;
+    private int TIME_PNEU;
+    private boolean isCompletedPneu;
 
     // Sensor
     private long lastUpdate;
     private float lastX;
     private static float xAcceleration;
+    private int activePneus;
 
     public GameManager(CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
@@ -122,8 +129,6 @@ public class GameManager implements IGameLoop {
                 /*final float alpha = 0.8f;
                 float gravity = alpha * SensorManager.GRAVITY_EARTH + (1 - alpha) * x;*/
 
-                float dif = lastX - x;
-
                 // get the change of the x,y,z values of the accelerometer
                 //xAcceleration = Math.abs(dif);
 //                xAcceleration = dif;
@@ -137,7 +142,7 @@ public class GameManager implements IGameLoop {
                 if ((curTime - lastUpdate) > 2000) {
                     long diffTime = (curTime - lastUpdate);
                     lastUpdate = curTime;
-                    Log.d("Sensor", String.format("X : %s, Y : %s, Z : %s  | AcelX : %s | Dif : %s", x, y, z, xAcceleration, dif));
+                    //Log.d("Sensor", String.format("X : %s, Y : %s, Z : %s  | AcelX : %s | Dif : %s", x, y, z, xAcceleration, dif));
                 }
             }
         }
@@ -172,11 +177,13 @@ public class GameManager implements IGameLoop {
         nextLevelSprite.visible = false; //Deixa a mensagem e imagem de proximo level invisiveis
         startTime = System.currentTimeMillis(); //Define a quantidade de Pinks de acordo com o level
         aliveEnemy = TOTAL_ENEMIES+level; //Define a quantidade de mosquitos de acordo com o level
-        timeLevel = (int) Math.max(TIME_LEVEL * 3 - (System.currentTimeMillis() - startTime)/500, 1);
+        timeLevel = (int) Math.max(TIME_LEVEL * 3 - (System.currentTimeMillis() - startTime)/500, 1); // Sempre 19 segundos
         int newEnimies = (deadEnemy > 0)? aliveEnemy - deadEnemy : 0;
         Log.d("Enemy", deadEnemy + " mortos ");
         Log.d("Enemy", aliveEnemy + " vivos ");
         Log.d("Enemy", newEnimies + " novos");
+
+        calcPneu();
 
         deadEnemy = 0; // Renicia os inimigos que foram mortos
 
@@ -201,6 +208,42 @@ public class GameManager implements IGameLoop {
         Log.d("Level", "" + level);
         Log.d("Time Level", "" + timeLevel);
         Log.d("Enemy", enimies.size() + " na lista");
+    }
+
+    /**
+     * Max => 70%
+     * Min => 20%
+     *
+     * Tempo
+     *  15 -> 70% = 10s
+     *      1 - 10 = 1 x 10 = 10 { 70 - 10 = 60% }
+     *      11 - 20 = 2 x 10 = 20 { 70 - 20 = 50% }
+     *      21 - 30 = 3 x 10 = 30 { 70 - 30 = 40% }
+     *
+     *  Inimigo
+     *      1 - 10 = 60% = 1, 6 ( SORTEAR )
+     *      11 - 20 = 50% = 1, 12 ( SORTEAR )
+     */
+    private void calcPneu() {
+        activePneus = 1;
+        // Missao de tirar o pneu foi completada
+        isCompletedPneu = true;
+        int range = (int) Math.ceil(level / 10f);
+        Log.d("Pneu", "Range " + range);
+        NEXT_PNEU_TIME = MAX_PNEU_TIME - (range * 10);
+        NEXT_PNEU_TIME = (NEXT_PNEU_TIME < MIN_PNEU_TIME)? MIN_PNEU_TIME : NEXT_PNEU_TIME;
+        int p = NEXT_PNEU_TIME;
+        NEXT_PNEU_TIME = (p / 100) * timeLevel;
+        MIN_ENEMY_DEAD = (p / 100) * aliveEnemy + 1;
+        MIN_ENEMY_DEAD = random.nextInt(MIN_ENEMY_DEAD) + 1;
+    }
+
+    /**
+     * Se chegou no tempo limite para jogar o pneu na tela e o jogador nao matou o numero minimo de mosquitos
+     * @return true ou false
+     */
+    public boolean isPneuTime(){
+        return  NEXT_PNEU_TIME <= clock.getSecond() && MIN_ENEMY_DEAD > deadEnemy;
     }
 
     private void initNextLevel() {
@@ -307,23 +350,23 @@ public class GameManager implements IGameLoop {
     private int getTimeAfterStageOver() {
         Calendar dif = Calendar.getInstance();
         dif.setTimeInMillis(System.currentTimeMillis() - timeOver);
-        int sec = dif.get(Calendar.SECOND);
-        return sec;
+        return dif.get(Calendar.SECOND);
     }
 
     private void checkPneu() {
 
         // Se chegar em 5 segundos adiciona o pneu
-        if( clock.getSecond() == 5 ){
+        if( !pneu.isDoing() && isPneuTime() && !pneu.isDone() ){
             pneu.create(random.nextInt(limitPneuX), limitPneuY);
             mSprites.add(pneu);
             return;
         }
 
-        if(pneu.isDead()){
+        if(pneu.isDone()){
             Log.d("Pneu", "+1 Pneu removido" );
             int add;
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
+            pneu.score = add;
             Log.d("Score", "Valeu : " + add);
             mSprites.remove(pneu);
         }
@@ -387,6 +430,10 @@ public class GameManager implements IGameLoop {
                 timeOver = System.currentTimeMillis(); // Tempo que o level terminou
             }
         }
+    }
+
+    private boolean isEndStage(){
+        return aliveEnemy <= 0 && pneu.isDone();
     }
 
     public boolean isNextLevel(){

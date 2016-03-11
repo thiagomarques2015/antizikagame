@@ -1,8 +1,10 @@
 package com.antizikagame.object;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 
 import com.antizikagame.control.GameManager;
+import com.antizikagame.view.CanvasView;
 
 import java.util.Calendar;
 
@@ -15,11 +17,17 @@ public class Pneu extends Sprite {
     private int speedY;
     private int timeStarted;
     private float frameTime = 3.666f;
-    private boolean dead;
+    private boolean done;
+    private int wonX;
+    private int wonY;
+    private boolean hit;
+    public int score;
+    private boolean doing;
 
     public Pneu(int x, int y, int finalY, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
         this.finalY = finalY;
+        wonY = finalY;
         create(x, y);
         setAnimation(0, 0, 1, ANIM_STOP);
     }
@@ -28,7 +36,8 @@ public class Pneu extends Sprite {
         this.x = x;
         this.y = y;
         timeStarted = getTime();
-        dead = false;
+        doing = true;
+        done = false;
         return this;
     }
 
@@ -60,17 +69,39 @@ public class Pneu extends Sprite {
         this.x += xS;
 
         if(x < -width){
-            dead = true;
+            done = true;
+            hit = true;
+            wonX = width;
             x = -width;
         }
 
         if(x > GameManager.getWidth()+width){
-            dead = true;
+            done = true;
+            hit = true;
+            wonX = GameManager.getWidth() - width;
             x = GameManager.getWidth()+width;
         }
     }
 
-    public boolean isDead() {
-        return dead;
+    @Override
+    public void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        if(hit){
+            hit = false;
+            canvas.drawText("+" + score, wonX, wonY, CanvasView.getPaintHit());
+        }
+    }
+
+    public boolean isDoing() {
+        return doing;
+    }
+
+    public boolean isHit(){
+        return hit;
+    }
+
+    public boolean isDone() {
+        return done;
     }
 }

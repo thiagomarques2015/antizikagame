@@ -126,7 +126,7 @@ public class Enemy extends Sprite {
         super.onDraw(canvas);
 
         if(isHit()){
-            showingHit();
+            hit = true;
             canvas.drawText("+" + score, deadX, deadY, CanvasView.getPaintHit());
         }
     }
@@ -197,10 +197,6 @@ public class Enemy extends Sprite {
 
     public boolean isHit() {
         return hit;
-    }
-
-    public void showingHit(){
-        hit = true;
     }
 
     public boolean isOutHeightScreem(){
