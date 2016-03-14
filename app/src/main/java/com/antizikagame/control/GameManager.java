@@ -74,8 +74,6 @@ public class GameManager implements IGameLoop {
     private Pneu pneu;
     private int limitPneuX;
     private int limitPneuY;
-    private int TIME_PNEU;
-    private boolean isCompletedPneu;
 
     // Sensor
     private long lastUpdate;
@@ -225,17 +223,17 @@ public class GameManager implements IGameLoop {
      *      11 - 20 = 50% = 1, 12 ( SORTEAR )
      */
     private void calcPneu() {
-        activePneus = 1;
-        // Missao de tirar o pneu foi completada
-        isCompletedPneu = true;
+        activePneus = 0;
         int range = (int) Math.ceil(level / 10f);
         Log.d("Pneu", "Range " + range);
         NEXT_PNEU_TIME = MAX_PNEU_TIME - (range * 10);
         NEXT_PNEU_TIME = (NEXT_PNEU_TIME < MIN_PNEU_TIME)? MIN_PNEU_TIME : NEXT_PNEU_TIME;
         int p = NEXT_PNEU_TIME;
-        NEXT_PNEU_TIME = (p / 100) * timeLevel;
-        MIN_ENEMY_DEAD = (p / 100) * aliveEnemy + 1;
+        NEXT_PNEU_TIME = (int) Math.ceil((p / 100f) * timeLevel);
+        MIN_ENEMY_DEAD = (int) Math.ceil((p / 100f) * aliveEnemy + 1);
         MIN_ENEMY_DEAD = random.nextInt(MIN_ENEMY_DEAD) + 1;
+        Log.d("Pneu", "NEXT_PNEU_TIME : " + NEXT_PNEU_TIME);
+        Log.d("Pneu", "MIN_ENEMY_DEAD : " + MIN_ENEMY_DEAD);
     }
 
     /**
@@ -243,7 +241,7 @@ public class GameManager implements IGameLoop {
      * @return true ou false
      */
     public boolean isPneuTime(){
-        return  NEXT_PNEU_TIME <= clock.getSecond() && MIN_ENEMY_DEAD > deadEnemy;
+        return  NEXT_PNEU_TIME == clock.getSecond() && MIN_ENEMY_DEAD > deadEnemy;
     }
 
     private void initNextLevel() {
@@ -318,6 +316,15 @@ public class GameManager implements IGameLoop {
         checkPneu();
         updateSprites();
         canvasView.redraw();
+        removeAll();
+    }
+
+    private void removeAll() {
+        if(activePneus <= 0){
+            int sec = pneu.getTime() - pneu.timeDone;
+            if(sec > 1)
+                mSprites.remove(pneu);
+        }
     }
 
     public void onDraw() {
@@ -333,7 +340,7 @@ public class GameManager implements IGameLoop {
 
     public synchronized void onTouchEvent(int x, int y) {
         //mainCircle.moveMainCircleWhenTouchAt(x, y);
-        if(aliveEnemy > 0){
+        if(!isEndStage()){
            /* Log.d("Enemy", aliveEnemy + " vivo");
             Log.d("Enemy", deadEnemies.size() + " mortos");*/
             racket.move(x, y);
@@ -355,20 +362,29 @@ public class GameManager implements IGameLoop {
 
     private void checkPneu() {
 
-        // Se chegar em 5 segundos adiciona o pneu
-        if( !pneu.isDoing() && isPneuTime() && !pneu.isDone() ){
+        // Detecta se estar na hora de mostrar o pneu
+        if( pneu.isIdle() && isPneuTime() ){
+            Log.d("Pneu", "Adiciona o pneu na tela" );
+            // Adiciona um pneu na lista
+            activePneus++;
             pneu.create(random.nextInt(limitPneuX), limitPneuY);
             mSprites.add(pneu);
             return;
         }
 
+        if( activePneus <=0 ) return;
+
         if(pneu.isDone()){
             Log.d("Pneu", "+1 Pneu removido" );
+            activePneus--;
             int add;
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
             pneu.score = add;
             Log.d("Score", "Valeu : " + add);
-            mSprites.remove(pneu);
+
+            if(isEndStage()){
+                stageFinished();
+            }
         }
     }
 
@@ -423,17 +439,17 @@ public class GameManager implements IGameLoop {
             aliveEnemy--; // Remove um mosquito da lista
             deadEnemy++; // Matou um inimigo
 
-            if(aliveEnemy <= 0){
-                Log.d("Gameover", "Fim do nivel");
-                clock.setPause(true); // Pausa o relogio
-                nextLevelSprite.visible = true; // Exibe imagem de proximo nível
-                timeOver = System.currentTimeMillis(); // Tempo que o level terminou
+            if(isEndStage()){
+                stageFinished();
             }
         }
     }
 
-    private boolean isEndStage(){
-        return aliveEnemy <= 0 && pneu.isDone();
+    private void stageFinished() {
+        Log.d("Gameover", "Fim do nivel");
+        clock.setPause(true); // Pausa o relogio
+        nextLevelSprite.visible = true; // Exibe imagem de proximo nível
+        timeOver = System.currentTimeMillis(); // Tempo que o level terminou
     }
 
     public boolean isNextLevel(){
@@ -449,8 +465,8 @@ public class GameManager implements IGameLoop {
         ctx.startActivity(intent);
     }
 
-    public boolean isGameOver(){
-        return gameLoopThread != null && gameLoopThread.isRunning();
+    public boolean isEndStage(){
+        return aliveEnemy <= 0 && activePneus <= 0;
     }
 
     public Integer getScore() {

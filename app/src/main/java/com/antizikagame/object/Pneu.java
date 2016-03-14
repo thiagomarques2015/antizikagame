@@ -18,11 +18,12 @@ public class Pneu extends Sprite {
     private int timeStarted;
     private float frameTime = 3.666f;
     private boolean done;
+    public int timeDone;
     private int wonX;
     private int wonY;
     private boolean hit;
     public int score;
-    private boolean doing;
+    private boolean idle;
 
     public Pneu(int x, int y, int finalY, Bitmap bmp, int bmp_rows, int bmp_columns) {
         super(bmp, bmp_rows, bmp_columns);
@@ -36,12 +37,14 @@ public class Pneu extends Sprite {
         this.x = x;
         this.y = y;
         timeStarted = getTime();
-        doing = true;
+        speedY = 0;
+        idle = true;
         done = false;
+        hit = false;
         return this;
     }
 
-    private int getTime(){
+    public int getTime(){
         return Calendar.getInstance().get(Calendar.SECOND);
     }
 
@@ -49,12 +52,18 @@ public class Pneu extends Sprite {
     public void update() {
         super.update();
 
+        idle = false;
+
         int time = getTime() - timeStarted;
         speedY = speedY + GRAVITY  + time;
         this.y += speedY;
 
         if(y > finalY){
             this.y = finalY;
+        }
+
+        if(y != finalY || done){
+            return;
         }
 
         float xAcceleration = GameManager.getxAcceleration();
@@ -71,13 +80,17 @@ public class Pneu extends Sprite {
         if(x < -width){
             done = true;
             hit = true;
+            timeDone = getTime();
+            idle = true;
             wonX = width;
             x = -width;
         }
 
         if(x > GameManager.getWidth()+width){
             done = true;
+            timeDone = getTime();
             hit = true;
+            idle = true;
             wonX = GameManager.getWidth() - width;
             x = GameManager.getWidth()+width;
         }
@@ -88,17 +101,12 @@ public class Pneu extends Sprite {
         super.onDraw(canvas);
 
         if(hit){
-            hit = false;
             canvas.drawText("+" + score, wonX, wonY, CanvasView.getPaintHit());
         }
     }
 
-    public boolean isDoing() {
-        return doing;
-    }
-
-    public boolean isHit(){
-        return hit;
+    public boolean isIdle() {
+        return idle;
     }
 
     public boolean isDone() {
