@@ -207,6 +207,8 @@ public class GameManager implements IGameLoop {
         initClock();
 
         soundManager.play(SoundManager.BACKGROUND);
+        soundManager.pause(SoundManager.HIT);
+        soundManager.pause(SoundManager.VOICE);
 
         Log.d("Level", "" + level);
         Log.d("Time Level", "" + timeLevel);
@@ -259,7 +261,7 @@ public class GameManager implements IGameLoop {
         Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.pneu);
         int rows = 1;
         int cols = 3;
-        limitPneuX = width / 2 - bmp.getWidth() / 2;
+        limitPneuX = width - bmp.getWidth();
         limitPneuY = 0;
         pneu = new Pneu(limitPneuX, limitPneuY , height - mActionBarSize - 15, bmp, rows, cols);
     }
@@ -315,6 +317,7 @@ public class GameManager implements IGameLoop {
     @Override
     public void pause() {
         pauseSensor();
+        soundManager.pause(SoundManager.BACKGROUND);
         soundManager.pause(SoundManager.VOICE);
         soundManager.pause(SoundManager.HIT);
     }
@@ -373,7 +376,9 @@ public class GameManager implements IGameLoop {
             Log.d("Pneu", "Adiciona o pneu na tela" );
             // Adiciona um pneu na lista
             activePneus++;
-            pneu.create(random.nextInt(limitPneuX), limitPneuY);
+            int x = random.nextInt(limitPneuX);
+            Log.d("Pneu", "Posiciona em " + x );
+            pneu.create(x, limitPneuY);
             mSprites.add(pneu);
             return;
         }
@@ -387,7 +392,6 @@ public class GameManager implements IGameLoop {
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
             pneu.score = add;
             Log.d("Score", "Valeu : " + add);
-            soundManager.play(SoundManager.HIT);
 
             if(isEndStage()){
                 stageFinished();
@@ -463,6 +467,8 @@ public class GameManager implements IGameLoop {
         clock.setPause(true); // Pausa o relogio
         nextLevelSprite.visible = true; // Exibe imagem de proximo nível
         timeOver = System.currentTimeMillis(); // Tempo que o level terminou
+        soundManager.pause(SoundManager.HIT);
+        soundManager.pause(SoundManager.VOICE);
     }
 
     public boolean isNextLevel(){
