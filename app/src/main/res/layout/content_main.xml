@@ -3,11 +3,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.pavel.dolbik.antizikagame.MainActivity"
-    android:background="@drawable/background">
+    tools:context="com.pavel.dolbik.antizikagame.MainActivity">
 
-    <com.antizikagame.view.CanvasView
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <me.relex.circleindicator.CircleIndicator
+        android:layout_width="match_parent"
+        android:layout_above="@+id/start"
+        android:id="@+id/pagination"
+        android:layout_height="48dp"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:visibility="invisible"
+        android:id="@+id/start"
+        android:background="@color/colorPrimary"
+        android:layout_margin="@dimen/button_margin_horizontal"
+        android:textColor="@android:color/white"
+        android:text="@string/iniciar"
+        />
 
 </RelativeLayout>

@@ -224,7 +224,7 @@ public class GameManager implements IGameLoop {
      */
     private void calcPneu() {
         activePneus = 0;
-        int range = (int) Math.ceil(level / 10f);
+        /*int range = (int) Math.ceil(level / 10f);
         Log.d("Pneu", "Range " + range);
         NEXT_PNEU_TIME = MAX_PNEU_TIME - (range * 10);
         NEXT_PNEU_TIME = (NEXT_PNEU_TIME < MIN_PNEU_TIME)? MIN_PNEU_TIME : NEXT_PNEU_TIME;
@@ -233,7 +233,10 @@ public class GameManager implements IGameLoop {
         MIN_ENEMY_DEAD = (int) Math.ceil((p / 100f) * aliveEnemy + 1);
         MIN_ENEMY_DEAD = random.nextInt(MIN_ENEMY_DEAD) + 1;
         Log.d("Pneu", "NEXT_PNEU_TIME : " + NEXT_PNEU_TIME);
-        Log.d("Pneu", "MIN_ENEMY_DEAD : " + MIN_ENEMY_DEAD);
+        Log.d("Pneu", "MIN_ENEMY_DEAD : " + MIN_ENEMY_DEAD);*/
+
+        NEXT_PNEU_TIME = random.nextInt(timeLevel);
+        NEXT_PNEU_TIME = (NEXT_PNEU_TIME < 5)? NEXT_PNEU_TIME + 5 : NEXT_PNEU_TIME;
     }
 
     /**
@@ -241,7 +244,7 @@ public class GameManager implements IGameLoop {
      * @return true ou false
      */
     public boolean isPneuTime(){
-        return  NEXT_PNEU_TIME == clock.getSecond() && MIN_ENEMY_DEAD > deadEnemy;
+        return  NEXT_PNEU_TIME == clock.getSecond() /*&& MIN_ENEMY_DEAD > deadEnemy*/;
     }
 
     private void initNextLevel() {

@@ -6,11 +6,12 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.antizikagame.R;
 
-public class GameOverActivity extends AppCompatActivity {
+public class GameOverActivity extends AppCompatActivity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +23,9 @@ public class GameOverActivity extends AppCompatActivity {
         TextView vScore = (TextView) findViewById(R.id.score);
         final int score = getIntent().getIntExtra("score", 0);
         vScore.setText(String.format(getString(R.string.score), score));
+
+        Button vTry = (Button) findViewById(R.id.again);
+        vTry.setOnClickListener(this);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -55,4 +59,8 @@ public class GameOverActivity extends AppCompatActivity {
         startActivity(sendIntent);
     }
 
+    @Override
+    public void onClick(View view) {
+        onBackPressed();
+    }
 }

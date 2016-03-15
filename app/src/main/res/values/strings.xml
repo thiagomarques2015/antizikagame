@@ -1,10 +1,13 @@
 <resources>
     <string name="app_name">Antizika Game</string>
     <string name="score">Score : %s</string>
-    <string name="next_level_msg">Clique na tela para o próximo nível</string>
+    <string name="next_level_msg">Arraste a tela para iniciar o próximo nível</string>
     <string name="title_activity_game_over">Game Over</string>
     <string name="game_over_mensagem">Você foi muito bem! Mas não basta apenas matar os mosquitos, você precisa eliminar os focos e evitar qualquer criadouro com água parada.</string>
     <string name="game_over">Game Over</string>
     <string name="title_share">Compartilhar</string>
     <string name="text_share">Alcancei %s no Antizika ultrapasse se for capaz :D. Baixe na Google Play https://play.google.com/store/apps/details?id=br.net.antizika</string>
+    <string name="title_activity_game_play">GamePlay</string>
+    <string name="iniciar">Iniciar</string>
+    <string name="tentar_novamente">Tentar novamente</string>
 </resources>

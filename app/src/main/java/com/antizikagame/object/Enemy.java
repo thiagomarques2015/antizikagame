@@ -37,6 +37,7 @@ public class Enemy extends Sprite {
     public int deadY;
     public int deadX;
     public int score;
+    private int hitTime;
 
 
     public Enemy(int x, int y, int speed, int actionBarHeight, Random random, Bitmap bmp, int bmp_rows, int bmp_columns) {
@@ -110,6 +111,7 @@ public class Enemy extends Sprite {
         if(isDead()) return;
         // Salva a posicao do ponto
         hit = true;
+        hitTime = getTime();
         this.deadX = x;
         this.deadY = y;
         // Mata o inimigo
@@ -125,8 +127,13 @@ public class Enemy extends Sprite {
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if(isHit()){
-            hit = true;
+        int time = 2;
+
+        int sec = getTime() - hitTime;
+
+        if(hit){
+            if(sec > time)
+                hit = false;
             canvas.drawText("+" + score, deadX, deadY, CanvasView.getPaintHit());
         }
     }
@@ -193,10 +200,6 @@ public class Enemy extends Sprite {
 
     public boolean isDead() {
         return dying || dead;
-    }
-
-    public boolean isHit() {
-        return hit;
     }
 
     public boolean isOutHeightScreem(){

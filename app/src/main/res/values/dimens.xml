@@ -7,4 +7,5 @@
     <dimen name="next_level_size">15sp</dimen>
     <dimen name="score_size">15sp</dimen>
     <dimen name="point_size">18sp</dimen>
+    <dimen name="button_margin_horizontal">10dp</dimen>
 </resources>
