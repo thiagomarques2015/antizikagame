@@ -10,8 +10,11 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.antizikagame.R;
+import com.antizikagame.control.SoundManager;
 
 public class GameOverActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private SoundManager soundManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +42,20 @@ public class GameOverActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onBackPressed() {
         back();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        soundManager = SoundManager.getInstance(this).play(SoundManager.BACKGROUND_GAMEOVER_1).play(SoundManager.BACKGROUND_GAMEOVER_2);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        soundManager.pause(SoundManager.BACKGROUND_GAMEOVER_1).pause(SoundManager.BACKGROUND_GAMEOVER_2);
     }
 
     private void back() {

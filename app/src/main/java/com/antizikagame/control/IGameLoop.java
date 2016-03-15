@@ -5,4 +5,6 @@ package com.antizikagame.control;
  */
 public interface IGameLoop {
     void update();
+    void pause();
+    void resume();
 }

@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.antizikagame.R;
 import com.antizikagame.control.GameManager;
 import com.antizikagame.control.ICanvasView;
+import com.antizikagame.control.SoundManager;
 import com.antizikagame.object.SimpleCircle;
 import com.antizikagame.object.Sprite;
 
@@ -46,7 +47,8 @@ public class CanvasView extends View implements ICanvasView {
 
         initWidthAndHeight(context);
         initPaint();
-        gameManager = new GameManager(this, width, height);
+        SoundManager soundManager = SoundManager.getInstance(context);
+        gameManager = new GameManager(soundManager, this, width, height);
     }
 
     private void initWidthAndHeight(Context context) {
@@ -135,10 +137,13 @@ public class CanvasView extends View implements ICanvasView {
 
         Log.d("Canvas", "Ganhou focus? " + hasWindowFocus);
 
+        // Pausa o jogo menos o relogio
+        gameManager.setPause(!hasWindowFocus);
+
         if(hasWindowFocus){
-            gameManager.startSensor();
+            gameManager.resume();
         }else{
-            gameManager.pauseSensor();
+            gameManager.pause();
         }
     }
 

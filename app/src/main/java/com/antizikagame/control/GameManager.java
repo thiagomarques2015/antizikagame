@@ -36,6 +36,7 @@ public class GameManager implements IGameLoop {
     private static final int MAX_SPEED_ENEMY = 7;
     private static final int MAX_PNEU_TIME = 70;
     private static final int MIN_PNEU_TIME = 20;
+    private final SoundManager soundManager;
     private int MIN_ENEMY_DEAD;
     private int NEXT_PNEU_TIME;
     private final Random random;
@@ -80,10 +81,12 @@ public class GameManager implements IGameLoop {
     private float lastX;
     private static float xAcceleration;
     private int activePneus;
+    private boolean pause;
 
-    public GameManager(CanvasView canvasView, int width, int height) {
+    public GameManager(SoundManager soundManager, CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
         this.context = canvasView.getContext();
+        this.soundManager = soundManager;
         mSprites = new ArrayList<>();
         enimies = new ArrayList<>();
         deadEnemies = new ArrayList<>();
@@ -203,38 +206,19 @@ public class GameManager implements IGameLoop {
 
         initClock();
 
+        soundManager.play(SoundManager.BACKGROUND);
+
         Log.d("Level", "" + level);
         Log.d("Time Level", "" + timeLevel);
         Log.d("Enemy", enimies.size() + " na lista");
     }
 
+
     /**
-     * Max => 70%
-     * Min => 20%
-     *
-     * Tempo
-     *  15 -> 70% = 10s
-     *      1 - 10 = 1 x 10 = 10 { 70 - 10 = 60% }
-     *      11 - 20 = 2 x 10 = 20 { 70 - 20 = 50% }
-     *      21 - 30 = 3 x 10 = 30 { 70 - 30 = 40% }
-     *
-     *  Inimigo
-     *      1 - 10 = 60% = 1, 6 ( SORTEAR )
-     *      11 - 20 = 50% = 1, 12 ( SORTEAR )
+     * Calcula o tempo que o pneu ira aparecer
      */
     private void calcPneu() {
         activePneus = 0;
-        /*int range = (int) Math.ceil(level / 10f);
-        Log.d("Pneu", "Range " + range);
-        NEXT_PNEU_TIME = MAX_PNEU_TIME - (range * 10);
-        NEXT_PNEU_TIME = (NEXT_PNEU_TIME < MIN_PNEU_TIME)? MIN_PNEU_TIME : NEXT_PNEU_TIME;
-        int p = NEXT_PNEU_TIME;
-        NEXT_PNEU_TIME = (int) Math.ceil((p / 100f) * timeLevel);
-        MIN_ENEMY_DEAD = (int) Math.ceil((p / 100f) * aliveEnemy + 1);
-        MIN_ENEMY_DEAD = random.nextInt(MIN_ENEMY_DEAD) + 1;
-        Log.d("Pneu", "NEXT_PNEU_TIME : " + NEXT_PNEU_TIME);
-        Log.d("Pneu", "MIN_ENEMY_DEAD : " + MIN_ENEMY_DEAD);*/
-
         NEXT_PNEU_TIME = random.nextInt(timeLevel);
         NEXT_PNEU_TIME = (NEXT_PNEU_TIME < 5)? NEXT_PNEU_TIME + 5 : NEXT_PNEU_TIME;
     }
@@ -311,15 +295,34 @@ public class GameManager implements IGameLoop {
 
     @Override
     public void update() {
+        if(pause) return;
         if(clock.isOut()){
             gameOver("Game Over, você foi muito bem! Mas não basta apenas matar os mosquitos, você precisa eliminar os focos e evita qualquer criadouro com água parada.");
             return;
         }
+
+        if(clock.getSecond() == 5){
+            soundManager.play(SoundManager.VOICE);
+        }
+
         checkEnimies();
         checkPneu();
         updateSprites();
         canvasView.redraw();
         removeAll();
+    }
+
+    @Override
+    public void pause() {
+        pauseSensor();
+        soundManager.pause(SoundManager.VOICE);
+        soundManager.pause(SoundManager.HIT);
+    }
+
+    @Override
+    public void resume() {
+        soundManager.play(SoundManager.BACKGROUND);
+        startSensor();
     }
 
     private void removeAll() {
@@ -384,6 +387,7 @@ public class GameManager implements IGameLoop {
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
             pneu.score = add;
             Log.d("Score", "Valeu : " + add);
+            soundManager.play(SoundManager.HIT);
 
             if(isEndStage()){
                 stageFinished();
@@ -407,8 +411,9 @@ public class GameManager implements IGameLoop {
 
         // Atrasa a morte do ultimo inimigo em 1 segundo, para da tempo de aparecer a animacao da morte
         if(aliveEnemy <= 0){
-            if(sec <= 1)
+            if(sec <= 1){
                 return;
+            }
         }
 
         if(deadEnemies.size() > 0){
@@ -417,8 +422,10 @@ public class GameManager implements IGameLoop {
             // Remove os inimigos da lista de sprites
             mSprites.removeAll(deadEnemies);
 
-            if(aliveEnemy <= 0)
+            if(aliveEnemy <= 0){
+                soundManager.pause(SoundManager.HIT);
                 enimies.clear();
+            }
         }
     }
 
@@ -426,6 +433,7 @@ public class GameManager implements IGameLoop {
         if(e.isAfterDead()){
             Log.d("Enemy", "+1 Matou um inimigo");
             deadEnemies.add(e);
+            soundManager.pause(SoundManager.HIT);
         }
     }
 
@@ -441,6 +449,8 @@ public class GameManager implements IGameLoop {
 
             aliveEnemy--; // Remove um mosquito da lista
             deadEnemy++; // Matou um inimigo
+
+            soundManager.play(SoundManager.HIT);
 
             if(isEndStage()){
                 stageFinished();
@@ -460,6 +470,9 @@ public class GameManager implements IGameLoop {
     }
 
     private void gameOver(String text) {
+        soundManager.pause(SoundManager.BACKGROUND);
+        soundManager.pause(SoundManager.VOICE);
+        soundManager.pause(SoundManager.HIT);
         gameLoopThread.setRunning(false);
         Log.d("Game", "Mesagem : " + text);
         Context ctx = context;
@@ -488,5 +501,9 @@ public class GameManager implements IGameLoop {
         Log.d("Enemy", mSprites.size() + " sprites");
         Log.d("Enemy", enimies.size() + " na lista de ativos");
         Log.d("Enemy", deadEnemies.size() + " na lista de mortos");
+    }
+
+    public void setPause(boolean pause) {
+        this.pause = pause;
     }
 }
