@@ -114,6 +114,7 @@ public class GameManager implements IGameLoop {
     }
 
     public static float getxAcceleration() {
+//        xAcceleration = -2.0f;
         return xAcceleration;
     }
 
@@ -169,6 +170,7 @@ public class GameManager implements IGameLoop {
     }
 
     private void newStage() {
+
         // Adiciona todos os inimigos na lista de mortos
         deadEnemies.addAll(enimies);
         // Limpa a lista de inimigos na lista
@@ -210,6 +212,11 @@ public class GameManager implements IGameLoop {
         soundManager.pause(SoundManager.HIT);
         soundManager.pause(SoundManager.VOICE);
 
+        if(pneu != null)
+            pneu.create(limitPneuX, limitEnemyY);
+
+        setPause(false); // Inicia o gameloop
+
         Log.d("Level", "" + level);
         Log.d("Time Level", "" + timeLevel);
         Log.d("Enemy", enimies.size() + " na lista");
@@ -221,8 +228,10 @@ public class GameManager implements IGameLoop {
      */
     private void calcPneu() {
         activePneus = 0;
-        NEXT_PNEU_TIME = random.nextInt(timeLevel);
-        NEXT_PNEU_TIME = (NEXT_PNEU_TIME < 5)? NEXT_PNEU_TIME + 5 : NEXT_PNEU_TIME;
+        int min = 9;
+        int max = timeLevel - 1;
+        NEXT_PNEU_TIME = random.nextInt((max - min) + 1) + min;
+        Log.d("Pneu", "O pneu irá aparecer em " + NEXT_PNEU_TIME + "s");
     }
 
     /**
@@ -467,6 +476,7 @@ public class GameManager implements IGameLoop {
         clock.setPause(true); // Pausa o relogio
         nextLevelSprite.visible = true; // Exibe imagem de proximo nível
         timeOver = System.currentTimeMillis(); // Tempo que o level terminou
+        setPause(true); // Pausa o gameloop
         soundManager.pause(SoundManager.HIT);
         soundManager.pause(SoundManager.VOICE);
     }

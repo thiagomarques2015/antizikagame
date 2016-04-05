@@ -61,7 +61,6 @@ public class CanvasView extends View implements ICanvasView {
     }
 
 
-
     private void initPaint() {
         // Sprites
         paint = new Paint();

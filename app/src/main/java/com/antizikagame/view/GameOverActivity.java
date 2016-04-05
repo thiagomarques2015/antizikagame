@@ -59,7 +59,7 @@ public class GameOverActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void back() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, GamePlayActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(intent);
     }
