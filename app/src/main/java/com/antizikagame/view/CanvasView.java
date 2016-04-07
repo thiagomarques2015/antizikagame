@@ -41,6 +41,7 @@ public class CanvasView extends View implements ICanvasView {
     private float scoreY;
     private Paint paintNext;
     public static Paint paintHit;
+    private Paint paintClockStage;
 
     public CanvasView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -79,6 +80,11 @@ public class CanvasView extends View implements ICanvasView {
         timeX = width* 0.8f;
         timeY = height*0.05f;
 
+        // Clock Stage
+        paintClockStage = new Paint();
+        paintClockStage.setColor(Color.WHITE);
+        paintClockStage.setTextSize(getTextSize(R.dimen.clock_size));
+
         // Next Level
         paintNext = new Paint();
         paintNext.setColor(Color.parseColor("#1f1a17"));
@@ -102,6 +108,12 @@ public class CanvasView extends View implements ICanvasView {
         this.canvas = canvas;
         // Relogio
         canvas.drawText(gameManager.getClock(), timeX, timeY, paintClock);
+        // Relogio Stage
+        if(gameManager.isNextLevel()){
+            String textStage = "00";
+            float ws = paintClock.measureText(textStage, 0, textStage.length());
+            canvas.drawText(gameManager.getStageClock(), getWidth()/2 -ws/2, getHeight()*0.5f, paintClockStage);
+        }
         // Score
         canvas.drawText(String.format(getContext().getString(R.string.score), gameManager.getScore().toString()), scoreX, scoreY, paintText);
 

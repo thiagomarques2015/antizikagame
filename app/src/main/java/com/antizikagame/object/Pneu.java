@@ -56,6 +56,10 @@ public class Pneu extends Sprite {
 
         int time = getTime() - timeStarted;
         speedY = speedY + GRAVITY  + time;
+
+        if(speedY < 0)
+            speedY *= -1;
+
         this.y += speedY;
 
         if(y > finalY){

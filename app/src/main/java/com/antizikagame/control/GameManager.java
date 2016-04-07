@@ -10,6 +10,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Handler;
 import android.util.Log;
 
 import com.antizikagame.R;
@@ -52,6 +53,7 @@ public class GameManager implements IGameLoop {
     private List<Enemy> enimies;
     private List<Enemy> deadEnemies;
     private Racket racket;
+    private ClockManager clockStage;
     private ClockManager clock;
     private int level = 0;
     private int score = 0;
@@ -82,6 +84,8 @@ public class GameManager implements IGameLoop {
     private static float xAcceleration;
     private int activePneus;
     private boolean pause;
+    private Handler hander;
+    private boolean pausedBeforeNextStage;
 
     public GameManager(SoundManager soundManager, CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
@@ -93,6 +97,8 @@ public class GameManager implements IGameLoop {
 
         random = new Random();
         res = canvasView.getResources();
+
+        hander = new Handler();
 
         this.width  = width;
         this.height = height;
@@ -114,7 +120,7 @@ public class GameManager implements IGameLoop {
     }
 
     public static float getxAcceleration() {
-//        xAcceleration = -2.0f;
+        //xAcceleration = -2.0f;
         return xAcceleration;
     }
 
@@ -266,6 +272,10 @@ public class GameManager implements IGameLoop {
         return clock.getTime();
     }
 
+    public String getStageClock(){
+        return clockStage.getTime();
+    }
+
     private void initPneu() {
         Bitmap bmp = BitmapFactory.decodeResource(res, R.drawable.pneu);
         int rows = 1;
@@ -306,7 +316,19 @@ public class GameManager implements IGameLoop {
 
     @Override
     public void update() {
-        if(pause) return;
+        if(pause){
+            if(pausedBeforeNextStage){
+                canvasView.redraw();
+            }
+
+            return;
+        }
+
+        if(isEndStage()){
+            stageFinished();
+            return;
+        }
+
         if(clock.isOut()){
             gameOver("Game Over, você foi muito bem! Mas não basta apenas matar os mosquitos, você precisa eliminar os focos e evita qualquer criadouro com água parada.");
             return;
@@ -356,20 +378,23 @@ public class GameManager implements IGameLoop {
             s.update();
     }
 
+
+    private Runnable onStartStage = new Runnable() {
+        @Override
+        public void run() {
+            pausedBeforeNextStage = false;
+            newStage(); // Inicia o novo nivel
+        }
+    };
+
     public synchronized void onTouchEvent(int x, int y) {
         //mainCircle.moveMainCircleWhenTouchAt(x, y);
+        if(pausedBeforeNextStage) return;
         if(!isEndStage()){
            /* Log.d("Enemy", aliveEnemy + " vivo");
             Log.d("Enemy", deadEnemies.size() + " mortos");*/
             racket.move(x, y);
-        }else{
-            //Log.d("Gameover", "Nao existe mais inimigos");
-            int sec = getTimeAfterStageOver();
-            // Se passar um 1 segundo depois do gameover fecha
-            if(sec > 1)
-                newStage(); // Inicia o novo nivel
         }
-        //moveEnemies(); // Acelera todos
     }
 
     private int getTimeAfterStageOver() {
@@ -384,9 +409,9 @@ public class GameManager implements IGameLoop {
         if( pneu.isIdle() && isPneuTime() ){
             Log.d("Pneu", "Adiciona o pneu na tela" );
             // Adiciona um pneu na lista
-            activePneus++;
+            activePneus=1;
             int x = random.nextInt(limitPneuX);
-            Log.d("Pneu", "Posiciona em " + x );
+            Log.d("Pneu", String.format("Posiciona em %s , Limite da tela %s", x, limitEnemyX ));
             pneu.create(x, limitPneuY);
             mSprites.add(pneu);
             return;
@@ -401,10 +426,6 @@ public class GameManager implements IGameLoop {
             score += add = (int) Math.max(100 - level*3 - (System.currentTimeMillis() - startTime)/500, 1);
             pneu.score = add;
             Log.d("Score", "Valeu : " + add);
-
-            if(isEndStage()){
-                stageFinished();
-            }
         }
     }
 
@@ -464,21 +485,32 @@ public class GameManager implements IGameLoop {
             deadEnemy++; // Matou um inimigo
 
             soundManager.play(SoundManager.HIT);
-
-            if(isEndStage()){
-                stageFinished();
-            }
         }
     }
 
     private void stageFinished() {
         Log.d("Gameover", "Fim do nivel");
+        if(clockStage == null)
+            clockStage = new ClockManager();
+
+        // Inicia o relogio do level
+        clockStage
+                .format("ss")
+                .defaultTime("00")
+                .timeInitial(System.currentTimeMillis())
+                .maxTime(Calendar.SECOND, 3)
+                .setPause(false);
+        aliveEnemy = 0;
+        activePneus = 0;
         clock.setPause(true); // Pausa o relogio
         nextLevelSprite.visible = true; // Exibe imagem de proximo nível
         timeOver = System.currentTimeMillis(); // Tempo que o level terminou
         setPause(true); // Pausa o gameloop
         soundManager.pause(SoundManager.HIT);
         soundManager.pause(SoundManager.VOICE);
+        pausedBeforeNextStage = true;
+        hander.removeCallbacks(onStartStage);
+        hander.postDelayed(onStartStage, 3000);
     }
 
     public boolean isNextLevel(){
@@ -498,7 +530,7 @@ public class GameManager implements IGameLoop {
     }
 
     public boolean isEndStage(){
-        return aliveEnemy <= 0 && activePneus <= 0;
+        return (aliveEnemy <= 0 && activePneus <= 0) || (aliveEnemy > 0 && enimies.size() <= 0 && activePneus <= 0);
     }
 
     public Integer getScore() {
@@ -517,6 +549,12 @@ public class GameManager implements IGameLoop {
         Log.d("Enemy", mSprites.size() + " sprites");
         Log.d("Enemy", enimies.size() + " na lista de ativos");
         Log.d("Enemy", deadEnemies.size() + " na lista de mortos");
+        Log.d("Mission", activePneus + " Pneu ativos");
+
+
+        /*for(Enemy e : enimies){
+            e.debug();
+        }*/
     }
 
     public void setPause(boolean pause) {

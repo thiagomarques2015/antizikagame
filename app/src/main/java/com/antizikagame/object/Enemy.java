@@ -2,6 +2,7 @@ package com.antizikagame.object;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.util.Log;
 
 import com.antizikagame.control.GameManager;
 import com.antizikagame.view.CanvasView;
@@ -20,6 +21,7 @@ public class Enemy extends Sprite {
     private static final int DYING = 3;
 
     private static int LIMIT_MAX_SPEED = 23;
+    private static int MIN_SPEED = 2;
     private static int MAX_SPEED = 7;
     private static final int RANGE_SPEED = MAX_SPEED / 2 - 1; // Range da velocidade
     private static final int GRAVITY = 10;
@@ -52,8 +54,11 @@ public class Enemy extends Sprite {
 
         this.MAX_SPEED = (speed < LIMIT_MAX_SPEED)? speed : LIMIT_MAX_SPEED;
 
-        speedX = (random.nextInt(MAX_SPEED) - RANGE_SPEED) + 1; //Velocidade horizontal de -3 a 3.
-        speedY = (random.nextInt(MAX_SPEED) - RANGE_SPEED) + 1; //Velocidade vertical de -3 a 3.
+        speedX = random.nextInt((MAX_SPEED - MIN_SPEED) + 1) + MIN_SPEED; //Velocidade horizontal de -3 a 3.
+        speedY = random.nextInt((MAX_SPEED - MIN_SPEED) + 1) + MIN_SPEED; //Velocidade vertical de -3 a 3.
+
+        speedX *= sortSpeed(random);
+        speedY *= sortSpeed(random);
 
         checkState();
         setAnimation(frame, firstFrame, firstFrame + CONT, ANIM_GO); // Seta a animação apenas como "ida" (ciclíca).
@@ -61,6 +66,10 @@ public class Enemy extends Sprite {
         dying = false;
         dead  = false;
         hit = false;
+    }
+
+    private int sortSpeed(Random random) {
+        return ( (random.nextInt(MAX_SPEED) - RANGE_SPEED + 1) > 0)? 1 : -1;
     }
 
     @Override
@@ -208,5 +217,13 @@ public class Enemy extends Sprite {
 
     public boolean isAfterDead(){
         return isOutHeightScreem() && dead;
+    }
+
+    public void debug() {
+        Log.d("Enemy", "======= Inimigo ======");
+        Log.d("Enemy", "SpeedX " + speedX);
+        Log.d("Enemy", "SpeedY " + speedY);
+        Log.d("Enemy", "x " + x);
+        Log.d("Enemy", "y " + y);
     }
 }

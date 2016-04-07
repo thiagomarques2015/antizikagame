@@ -14,7 +14,7 @@ import java.util.TimerTask;
  */
 public class ClockManager {
     private static final String LOG = "Time";
-    private final SimpleDateFormat format;
+    private SimpleDateFormat format;
     private Timer T;
 
     private Calendar dif;
@@ -23,6 +23,8 @@ public class ClockManager {
     private int timeLimit;
     private boolean isOut;
     private boolean isPaused;
+    private String defaultTime = "00:00";
+    private boolean isFormat;
 
     public ClockManager() {
         T=new Timer();
@@ -34,6 +36,20 @@ public class ClockManager {
         if(T != null)
             T.cancel();
     }
+
+    public ClockManager format(String f){
+        if(!isFormat){
+            this.isFormat = true;
+            format = new SimpleDateFormat(f, Locale.getDefault());
+        }
+        return this;
+    }
+
+    public ClockManager defaultTime(String d){
+        defaultTime = d;
+        return this;
+    }
+
     private TimerTask timerTask = new TimerTask() {
         @Override
         public void run() {
@@ -103,7 +119,7 @@ public class ClockManager {
     }
 
     public String getTime(){
-        return (getDif() != null)? format.format(getDif().getTime()) : "00:00";
+        return (getDif() != null)? format.format(getDif().getTime()) : defaultTime;
     }
 
     public int getSecond(){
