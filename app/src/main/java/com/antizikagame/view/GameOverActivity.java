@@ -1,6 +1,8 @@
 package com.antizikagame.view;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +13,7 @@ import android.widget.TextView;
 
 import com.antizikagame.R;
 import com.antizikagame.control.SoundManager;
+import com.antizikagame.object.Config;
 
 public class GameOverActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -23,9 +26,16 @@ public class GameOverActivity extends AppCompatActivity implements View.OnClickL
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Score
         TextView vScore = (TextView) findViewById(R.id.score);
         final int score = getIntent().getIntExtra("score", 0);
         vScore.setText(String.format(getString(R.string.score), score));
+
+        // High Score
+        TextView vHighScore = (TextView) findViewById(R.id.highscore);
+        SharedPreferences pref = getSharedPreferences(Config.Preferences, Context.MODE_PRIVATE);
+        long highscore = pref.getLong("highscore", score);
+        vHighScore.setText(String.format(getString(R.string.highscore), highscore));
 
         Button vTry = (Button) findViewById(R.id.again);
         vTry.setOnClickListener(this);

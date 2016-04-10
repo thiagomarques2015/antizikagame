@@ -2,6 +2,7 @@ package com.antizikagame.control;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -14,6 +15,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.antizikagame.R;
+import com.antizikagame.object.Config;
 import com.antizikagame.object.Enemy;
 import com.antizikagame.object.Pneu;
 import com.antizikagame.object.Racket;
@@ -86,6 +88,9 @@ public class GameManager implements IGameLoop {
     private boolean pause;
     private Handler hander;
     private boolean pausedBeforeNextStage;
+    // Score
+    private long highscore;
+    private SharedPreferences pref;
 
     public GameManager(SoundManager soundManager, CanvasView canvasView, int width, int height) {
         this.canvasView = canvasView;
@@ -111,6 +116,21 @@ public class GameManager implements IGameLoop {
         initPneu();
         initMainLoop(canvasView);
         initSensor();
+        initScore();
+    }
+
+    private void initScore() {
+        pref = context.getSharedPreferences(Config.Preferences, Context.MODE_PRIVATE);
+        highscore = pref.getLong("highscore", 0);
+    }
+
+    public Long getHighScore(){
+        long h = highscore;
+
+        if(score > highscore)
+            h = score;
+
+        return h;
     }
 
     private void initSensor() {
@@ -523,6 +543,10 @@ public class GameManager implements IGameLoop {
         soundManager.pause(SoundManager.HIT);
         gameLoopThread.setRunning(false);
         Log.d("Game", "Mesagem : " + text);
+        // Salva o high score
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putLong("highscore", getHighScore());
+        editor.apply();
         Context ctx = context;
         Intent intent = new Intent(ctx, GameOverActivity.class);
         intent.putExtra("score", score);

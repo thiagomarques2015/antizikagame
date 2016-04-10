@@ -42,6 +42,11 @@ public class CanvasView extends View implements ICanvasView {
     private Paint paintNext;
     public static Paint paintHit;
     private Paint paintClockStage;
+    private Paint.FontMetrics fms;
+    private Paint.FontMetrics fmsh;
+    private Paint paintHighScoreText;
+    private float highscoreX;
+    private float highscoreY;
 
     public CanvasView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -91,11 +96,22 @@ public class CanvasView extends View implements ICanvasView {
         paintNext.setTextSize(getTextSize(R.dimen.next_level_size));
 
         // Score
+        fms = new Paint.FontMetrics();
         paintText = new Paint();
         paintText.setColor(Color.WHITE);
         paintText.setTextSize(getTextSize(R.dimen.score_size));
         scoreX = width* 0.05f;
         scoreY = height*0.05f;
+        paintText.getFontMetrics(fms);
+
+        // HighScore
+        fmsh = new Paint.FontMetrics();
+        paintHighScoreText = new Paint();
+        paintHighScoreText.setColor(Color.WHITE);
+        paintHighScoreText.setTextSize(getTextSize(R.dimen.score_size));
+        highscoreX = width* 0.05f;
+        highscoreY = height*0.11f;
+        paintHighScoreText.getFontMetrics(fmsh);
     }
 
     private float getTextSize(int id){
@@ -115,7 +131,10 @@ public class CanvasView extends View implements ICanvasView {
             canvas.drawText(gameManager.getStageClock(), getWidth()/2 -ws/2, getHeight()*0.5f, paintClockStage);
         }
         // Score
-        canvas.drawText(String.format(getContext().getString(R.string.score), gameManager.getScore().toString()), scoreX, scoreY, paintText);
+        drawScore(R.string.score, R.color.colorPrimaryDark, gameManager.getScore().toString(), scoreX, scoreY, fms, paintText);
+        // HighScore
+        drawScore(R.string.highscore, R.color.colorPrimary, gameManager.getHighScore().toString(),
+                highscoreX, highscoreY, fmsh, paintHighScoreText);
 
         String nextLevel = getContext().getString(R.string.next_level_msg);
         float w = paintNext.measureText(nextLevel, 0, nextLevel.length());
@@ -124,6 +143,19 @@ public class CanvasView extends View implements ICanvasView {
             canvas.drawText(nextLevel, getWidth()/2 - w/2, getHeight()*0.7f, paintNext);
 
         gameManager.onDraw();
+    }
+
+    private void drawScore(int txtId, int color, String txt, float x, float y, Paint.FontMetrics fm, Paint paint) {
+        int margin = 15;
+        String scoreTxt = String.format(getContext().getString(txtId), txt);
+        paint.setColor(color);
+
+        canvas.drawRect(x - margin, y + fm.top - margin,
+                x + paint.measureText(scoreTxt) + margin, y + fm.bottom + margin, paint);
+
+        paint.setColor(Color.WHITE);
+
+        canvas.drawText(scoreTxt, x, y, paint);
     }
 
     @Override

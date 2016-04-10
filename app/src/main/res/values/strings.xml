@@ -10,4 +10,5 @@
     <string name="title_activity_game_play">GamePlay</string>
     <string name="iniciar">Iniciar</string>
     <string name="tentar_novamente">Tentar novamente</string>
+    <string name="highscore">High Score : %s</string>
 </resources>

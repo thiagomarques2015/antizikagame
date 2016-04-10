@@ -26,6 +26,16 @@
         android:textSize="23sp"
         android:textColor="@android:color/white"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/highscore"
+        android:layout_marginBottom="20dp"
+        android:id="@+id/highscore"
+        android:gravity="center"
+        android:textSize="23sp"
+        android:textColor="@android:color/white"/>
+
 
     <TextView
         android:layout_width="wrap_content"
